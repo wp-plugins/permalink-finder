@@ -21,7 +21,7 @@ The search of the database requires a small amount of extra overhead, but it onl
 
 Currently there are no configuration options. 
 
-This plugin was originally a modification of the popular Permalinks Permanently Removed Plugin, which is a good plugin for most uses. I had some extra needs and started modifying it until it no longer resembled the original. My thanks to Microkid at http://www.microkid.net/wordpress/permalinks-moved-permanently/ for producing such a nice design, which gave me my first lessons on how to write a plugin.
+This plugin was originally a modification of the popular permalinks-moved-permanently Plugin, which is a good plugin for most uses. I had some extra needs and started modifying it until it no longer resembled the original. My thanks to Microkid at http://www.microkid.net/wordpress/permalinks-moved-permanently/ for producing such a nice design, which gave me my first lessons on how to write a plugin.
 
 == Installation ==
 

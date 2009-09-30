@@ -2,7 +2,7 @@
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, google, seo, forward
 Stable tag: trunk
 Requires at least: 2.0
-Tested up to: 2.6
+Tested up to: 2.8
 Contributors: Keith Graham
 Stable tag: 1.0
 

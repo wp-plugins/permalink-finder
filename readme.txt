@@ -11,7 +11,7 @@ Detects 404 errors and does a search for pages that partially match the url ente
 
 == Description ==
 
-The Permalink Finder Plugin detects when Wordpress cannot find a permalink. Before it generates the 404 error it tries to locate any posts with similar words. It does this by searching through the database trying to find any of the word values form the bad link. It takes the best match and then, rather than issuing a 404 error it sends back a redirect to the correct page.
+The Permalink Finder Plugin detects when Wordpress cannot find a permalink. Before it generates the 404 error it tries to locate any posts with similar words. It does this by searching through the database trying to find any of the word values from the bad link. It takes the best match and then, rather than issuing a 404 error it sends back a redirect to the correct page.
 
 Users will see the page that they are looking for, and search engine spiders will see the 301 redirect and update their databases so that searchers will be linked to the correct page.
 

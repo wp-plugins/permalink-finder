@@ -33,4 +33,4 @@ The plugin can be tested by adding or deleting words from a working permalink in
 
 == Support ==
 
-This plugin is in active development. All feedback is welcome on <a href="http://www.blogseye.com/permalink-finder-plugin" title="Wordpress plugin: Permalinks Finder Plugin">My Wordpress and other program developement</a>.
+This plugin is in active development. All feedback is welcome on <a href="http://www.blogseye.com/permalink-finder-plugin" title="Wordpress plugin: Permalinks Finder Plugin">My Wordpress and other program development</a>.

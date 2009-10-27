@@ -4,7 +4,7 @@ Stable tag: trunk
 Requires at least: 2.0       
 Tested up to: 2.8.5
 Contributors: Keith Graham       
-Stable tag: 1.1
+Stable tag: 1.11
 
 Detects 404 errors and does a search for pages that partially match the url entered. Fixes mangled or altered permalinks and index files.
 
@@ -37,6 +37,9 @@ The plugin can be tested by adding or deleting words from a working permalink in
 * added ability select degree of matching on bad urls.
 * added the ability to redirect index.htm, index.html and index.shtml to blog home page.
 * fixed a stupid name in the install directory - should be "permalink-finder" no s.
+
+= 1.11 =
+* Fixed index option to work on PHP4 on some servers.
 
 == Support ==
 

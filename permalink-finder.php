@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/permalink-finder/
 Description: When you migrate from another platform to Wordpress, the canonical names of your posts may subtly change. Old links, including Google may throw 404 errors on your permalinks. In order to redirect your valuable links to the new naming structure, you will need some way of locating the poast based on the information available in the old link. This version adds some configuration control and redirects index pages.
-Version: 1.1
+Version: 1.11
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -36,12 +36,12 @@ function kpg_permalink_finder() {
 		if ($kpg_pf_index==null) $kpg_pf_index='';
 		if ($kpg_pf_index!='') $kpg_pf_index='Y';
 
-		$furl=$_SERVER["SCRIPT_URI"];
+		$furl=$_SERVER['REQUEST_URI'];
 		$burl=get_bloginfo('url');
 		// check to see if the user is coming in on a base default
-		
+		//echo "debug: $furl, $burl <br/>";
 		if ($kpg_pf_index=='Y') { // quick check to see if we are accessing an index page
-			if ($furl==$burl.'/index.html'||$furl==$burl.'/index.htm'||$furl==$burl.'/index.shtml'||$furl==$burl.'/default.asp') {
+			if ($furl=='/index.html'||$furl=='/index.htm'||$furl=='/index.shtml'||$furl=='/default.asp') {
 					kpg_301_forward(get_bloginfo('url'));
 			}
 		}

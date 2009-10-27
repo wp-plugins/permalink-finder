@@ -36,17 +36,14 @@ function kpg_permalink_finder() {
 		if ($kpg_pf_index==null) $kpg_pf_index='';
 		if ($kpg_pf_index!='') $kpg_pf_index='Y';
 
-		$furl=$_SERVER['REQUEST_URI'];
-		$burl=get_bloginfo('url');
+		$plink = basename( $_SERVER['REQUEST_URI'] ); // plink has the page that was 404'd	
 		// check to see if the user is coming in on a base default
-		//echo "debug: $furl, $burl <br/>";
 		if ($kpg_pf_index=='Y') { // quick check to see if we are accessing an index page
-			if ($furl=='/index.html'||$furl=='/index.htm'||$furl=='/index.shtml'||$furl=='/default.asp') {
+			if ($plink=='index.html'||$plink=='index.htm'||$plink=='index.shtml'||$plink=='default.asp') {
 					kpg_301_forward(get_bloginfo('url'));
 			}
 		}
 
-		$plink = basename( $_SERVER['REQUEST_URI'] ); // plink has the page that was 404'd	
 		// now figure if we need to fix a permalink
 		if ($kpg_pf_find<5) {
 			if( $ID = kpg_find_permalink_post( $plink,$kpg_pf_find ) ) { //check for match	

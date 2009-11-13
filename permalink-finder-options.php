@@ -131,7 +131,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 <tr valign="middle">
 	<td>Fix Blogger Labels </td>
 	<td><input name="kpg_pf_labels" type="checkbox" value="Y" <?php if ($kpg_pf_labels=='Y') {?> checked="checked" <?php } ?>/></td>
-	<td>Blogger.com uses the url &quot;/labels/&quot; folder instead of categories.If you have imported your site from Blogger.com, you can check off this option to automatically redirect links from /labels/string to /categories/string. </td>
+	<td>Blogger.com uses the url &quot;/labels/&quot; folder instead of categories. If you have imported your site from Blogger.com, you can check off this option to automatically redirect links from /labels/string to /category/string. </td>
 </tr>
 <tr>
 <td>Track 404 and redirects</td>

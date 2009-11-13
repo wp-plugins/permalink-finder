@@ -1,6 +1,6 @@
 <?php
 /*
-	WordPress 2.8 Plugin: Permalink-Finder 1.20 				
+	WordPress 2.8 Plugin: Permalink-Finder 1.30 				
 	Copyright (c) 2009 Keith P. Graham 	
  
 	File Information:  					
@@ -18,6 +18,7 @@ if(!current_user_can('manage_options')) {
 $kpg_pf_find='2';
 $kpg_pf_index='Y';
 $kpg_pf_stats='0';
+$kpg_pf_labels='Y';
 
 // see if we are getting anything from the admin update post.
 if(!empty($_POST['Submit'])) { // we have a post - need to change some options
@@ -32,6 +33,10 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	$kpg_pf_index = $_POST['kpg_pf_index'];
 	if ($kpg_pf_index==null) $kpg_pf_index='';
 	if ($kpg_pf_index!='') $kpg_pf_index='Y';
+	//		kpg_pf_labels: fix up blogger labels folder 
+	$kpg_pf_labels = $_POST['kpg_pf_labels'];
+	if ($kpg_pf_labels==null) $kpg_pf_labels='';
+	if ($kpg_pf_labels!='') $kpg_pf_labels='Y';
 	//		kpg_pf_stats: this is a radio box that indicates if the finder should be working or not default = true
 	$kpg_pf_stats = $_POST['kpg_pf_stats'];
 	if ($kpg_pf_stats==null) $kpg_pf_stats='0';
@@ -45,6 +50,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	$updateData['find']=$kpg_pf_find;
 	$updateData['index']=$kpg_pf_index;
 	$updateData['stats']=$kpg_pf_stats;
+	$updateData['labels']=$kpg_pf_stats;
 	if ($kpg_pf_stats=='0') { 
 		// clear out any statistics
 		unset($updateData['f404']);
@@ -67,6 +73,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	if ($updateData==null) $updateData=array();
 	$kpg_pf_find=$updateData['find'];
 	$kpg_pf_index=$updateData['index'];
+	$kpg_pf_labels=$updateData['labels'];
 	// check data and set defaults
 	if ($kpg_pf_find==null) $kpg_pf_find='2';
 	if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
@@ -74,6 +81,10 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	}
 	if ($kpg_pf_index==null) $kpg_pf_index='';
 	if ($kpg_pf_index!='') $kpg_pf_index='Y';
+	
+	if ($kpg_pf_labels==null) $kpg_pf_labels='';
+	if ($kpg_pf_labels!='') $kpg_pf_labels='Y';
+	
 	$kpg_pf_stats = $updateData['stats'];
 	if ($kpg_pf_stats==null) $kpg_pf_stats='0';
 	if ($kpg_pf_stats!='10' && $kpg_pf_stats!='20' && $kpg_pf_stats!='30') {
@@ -116,6 +127,11 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	<td><input name="kpg_pf_index" type="checkbox" value="Y" <?php if ($kpg_pf_index=='Y') {?> checked="checked" <?php } ?>/></td>
 	<td>If your have incoming links to index.html, index,htm, or index.shtml, then checking this will redirect any of these to your blog's main page and not show a 404 page not found. Useful for websites that previously had an index page.
 	</td>
+</tr>
+<tr valign="middle">
+	<td>Fix Blogger Labels </td>
+	<td><input name="kpg_pf_labels" type="checkbox" value="Y" <?php if ($kpg_pf_labels=='Y') {?> checked="checked" <?php } ?>/></td>
+	<td>Blogger.com uses the url &quot;/labels/&quot; folder instead of categories. If you have imported your site from Blogger.com, you can check off this option to automatically redirect links from /labels/string to /category/string. </td>
 </tr>
 <tr>
 <td>Track 404 and redirects</td>

@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/permalink-finder/
 Description: When you migrate from another platform to Wordpress, the canonical names of your posts may subtly change. Old links, including Google may throw 404 errors on your permalinks. In order to redirect your valuable links to the new naming structure, you will need some way of locating the poast based on the information available in the old link. Redirects links to index pages and keeps a log of recent 404 errors and redirects.
-Version: 1.20
+Version: 1.30
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -27,6 +27,10 @@ function kpg_permalink_finder() {
 		// get the configuration
 		$updateData=get_option('kpg_permalinfinder_options');
 		if ($updateData==null) $updateData=array();
+		$kpg_pf_labels=$updateData['labels'];
+		if ($kpg_pf_labels==null) $kpg_pf_labels='';
+		if ($kpg_pf_labels!='') $kpg_pf_labels='Y';
+
 		$kpg_pf_find=$updateData['find']; // used to tell if permalink fixing is going on
 		if ($kpg_pf_find==null) $kpg_pf_find='2';
 		if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
@@ -49,7 +53,38 @@ function kpg_permalink_finder() {
 			$r404[4]=$_SERVER['REMOTE_ADDR'];
 		}
 
-		$plink = basename( $_SERVER['REQUEST_URI'] ); // plink has the page that was 404'd	
+		$plink = basename( $_SERVER['REQUEST_URI'] ); // flink has full url that was missed
+		// check if the incoming line needs a blogger fix
+		if ($kpg_pf_labels=='Y') { 
+			$flink = $_SERVER['REQUEST_URI']; // plink has the page that was 404'd	
+			if (strpos($flink,'/labels/')!==false) {
+				$flink=str_replace('/labels/','/category/',$flink);
+				$flink=str_replace('.html','',$flink); // get dir of html and shtml at the end - don't need to search for these
+				$flink=str_replace('.shtml','',$flink); 
+				$flink=str_replace('.htm','',$flink); 
+				$flink=str_replace('_','-',$flink); // underscores should be dashes
+				$flink=str_replace('.','-',$flink); // periods should be dashes 
+				$flink=str_replace(' ','-',$flink); // spaces are wrong
+				$flink=str_replace('%20','-',$flink); // spaces are wrong
+				if ($kpg_pf_stats>'0') {
+					$f404=$updateData['f404']; // keep this in an array of arrays
+					if ($f404==null) {
+						$f404=array();
+					}
+					$r404[5]=$flink;
+					$n=array_unshift($f404,$r404);
+					 while ($n>$kpg_pf_stats) {
+						unset($f404[$kpg_pf_stats]);
+						$n=count($f404);
+					}
+					$updateData['f404']=$f404;
+					update_option('kpg_permalinfinder_options', $updateData);
+				}
+				kpg_301_forward($flink);
+				return;
+			}
+		}
+		
 		// check to see if the user is coming in on a base default
 		if ($kpg_pf_index=='Y') { // quick check to see if we are accessing an index page
 			if ($plink=='index.html'||$plink=='index.htm'||$plink=='index.shtml'||$plink=='default.asp') {
@@ -59,7 +94,7 @@ function kpg_permalink_finder() {
 						$f404=array();
 					}
 					$r404[5]=get_bloginfo('url');
-					$n=count($f404,$r404);
+					$n=array_unshift($f404,$r404);
 					 while ($n>$kpg_pf_stats) {
 						unset($f404[$kpg_pf_stats]);
 						$n=count($f404);

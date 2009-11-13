@@ -1,12 +1,12 @@
 === Permalink Finder Plugin ===
-Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, google, seo, forward       
-Stable tag: trunk       
+Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo, forward, index file, blogger, blogspot       
 Requires at least: 2.0       
-Tested up to: 2.8.5
+Tested up to: 2.9
 Contributors: Keith Graham       
-Stable tag: 1.11
+Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
+Stable tag: 1.20
 
-Detects 404 errors and does a search for pages that partially match the url entered. Fixes mangled or altered permalinks and index files.
+Detects 404 errors and does a search for pages that partially match the url entered. Redirects to good permalinks or index files.
 
 == Description ==
 
@@ -21,12 +21,31 @@ The configuration panel allows a user to select how the plugin finds a missing p
 
 Optionally, the plugin will redirect hits on index.html, index.htm, and index.shtml to the blog home page. This is useful when a website previously used a non-php home page.
 
+The plugin will also optionally keep track of the last few 404's or redirects. This is useful to find out what pages are missing or named badly that keep causing 404 errors or forcing redirects.
+
+Known issues: Since the plugin issues a redirect, it is possible that a badly written template or another plugin might already have written to the buffer. I have seen errors in other modules also cause this failure. If you get a <i>Warning: cannot modify header information error</i>, you may have to disable this plugin until the underlying error has been resolved.
+
+Donations:
+If you find this plugin useful, please visit my websites and, if appropriate, add a link to one on your blog: 
+<a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a>
+<a href="http://www.freenameastar.com/">Name a real star for free</a>
+<a href="http://www.jt30.com/">Amplified Blues Harmonica</a>
+or visit the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">National Wildlife Federation</a>.
+
+
 == Installation ==
 
 1. Download the plugin.
 2. Upload the plugin to your wp-content/plugins directory.
 3. Activate the plugin.
-The plugin can be tested by adding or deleting words from a working permalink in your browser address area. Even if you mangle the permalink it should find a valid link and almost always it will find the correct link.
+4. Change any options in the Permalink Finder settings.
+The plugin can be tested by adding or deleting words from a working permalink in your browser address area. Even if you mangle the permalink it should find a valid link and almost always it will find the correct link. 
+
+Donations:
+If you find this plugin useful, please visit my websites and, if appropriate, add a link to one on your blog: 
+<a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a>
+<a href="http://www.freenameastar.com/">Name a real star for free</a>
+<a href="http://www.jt30.com/">Amplified Blues Harmonica</a>
 
 == Changelog ==
 
@@ -39,7 +58,10 @@ The plugin can be tested by adding or deleting words from a working permalink in
 * fixed a stupid name in the install directory - should be "permalink-finder" no s.
 
 = 1.11 =
-* Fixed index option to work on PHP4 on some servers.
+* 10/26/2009 Fixed index option to work on PHP4 on some servers.
+
+= 1.20 =
+* 11/04/2009 Added a short log of fixed and unfixed permalinks.
 
 == Support ==
 

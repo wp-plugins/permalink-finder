@@ -9,7 +9,6 @@
  
 */
 
-
 // just a quick check to keep out the riff-raff
 if(!current_user_can('manage_options')) {
 	die('Access Denied');
@@ -203,12 +202,22 @@ for ($j=0;$j<count($e404);$j++ ) {
 </tr>
 <?php } ?>
 </table>
-<?php
+<p>
+  <?php
 		}
 	} // end if kpg_pf_stats>0
 ?>
-<br/>
-Version 1.20 November 4, 2009 </div>
+  <br/>
+  Version 1.20 November 3, 2009 (updated 11/16/2009).</p>
+<p>&nbsp; </p>
+<p>This plugin is free to use and I do not want payment for it. <br />
+  However, if you find this plugin useful, please visit my websites and, if appropriate, add a link to your blogroll.<br/>
+<a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a><br/>
+<a href="http://www.freenameastar.com/">Name a real star for free</a><br/>
+<a href="http://www.jt30.com/">Amplified Blues Harmonica</a><br/>
+or visit the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">National Wildlife Federation</a>. </p>
+
+</div>
 <?php 
 
 } // end if end-install else

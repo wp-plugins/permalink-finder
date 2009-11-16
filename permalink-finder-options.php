@@ -50,7 +50,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	$updateData['find']=$kpg_pf_find;
 	$updateData['index']=$kpg_pf_index;
 	$updateData['stats']=$kpg_pf_stats;
-	$updateData['labels']=$kpg_pf_stats;
+	$updateData['labels']=$kpg_pf_labels;
 	if ($kpg_pf_stats=='0') { 
 		// clear out any statistics
 		unset($updateData['f404']);

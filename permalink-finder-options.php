@@ -165,7 +165,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 
 </tr>
 <?php
-for ($j=0;$j<count($f404);$j++ ) {
+for ($j=0;$j<count($f404)&&$j<$kpg_pf_stats;$j++ ) {
 ?>
 <tr>
 <td style="background-color:#FFFFFF"><?php echo $f404[$j][0]; ?></td>
@@ -191,7 +191,7 @@ for ($j=0;$j<count($f404);$j++ ) {
 <td style="background-color:#FFFFFF">Remote IP</td>
 </tr>
 <?php
-for ($j=0;$j<count($e404);$j++ ) {
+for ($j=0;$j<count($e404)&&$j<$kpg_pf_stats;$j++ ) {
 ?>
 <tr>
 <td style="background-color:#FFFFFF"><?php echo $e404[$j][0]; ?></td>

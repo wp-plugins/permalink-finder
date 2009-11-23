@@ -57,7 +57,7 @@ function kpg_permalink_finder() {
 		// check if the incoming line needs a blogger fix
 		if ($kpg_pf_labels=='Y') { 
 			$flink = $_SERVER['REQUEST_URI']; // plink has the page that was 404'd	
-			if (strpos($flink,'/labels/')!==false) {
+			if (strpos($flink,'/labels/')>0) {
 				$flink=str_replace('/labels/','/category/',$flink);
 				$flink=str_replace('.html','',$flink); // get dir of html and shtml at the end - don't need to search for these
 				$flink=str_replace('.shtml','',$flink); 
@@ -73,8 +73,8 @@ function kpg_permalink_finder() {
 					}
 					$r404[5]=$flink;
 					$n=array_unshift($f404,$r404);
-					 while ($n>$kpg_pf_stats) {
-						unset($f404[$kpg_pf_stats]);
+					if ($n>$kpg_pf_stats) {
+						array_pop($f404);
 						$n=count($f404);
 					}
 					$updateData['f404']=$f404;
@@ -94,10 +94,13 @@ function kpg_permalink_finder() {
 						$f404=array();
 					}
 					$r404[5]=get_bloginfo('url');
-					$n=array_unshift($f404,$r404);
-					 while ($n>$kpg_pf_stats) {
-						unset($f404[$kpg_pf_stats]);
-						$n=count($f404);
+					array_unshift($f404,$r404);
+					$n=count($f404);
+					for ($j=0;$j<10;$j++) {
+						if ($n>$kpg_pf_stats) {
+							array_pop($f404);
+							$n=count($f404);
+						}
 					}
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
@@ -108,15 +111,19 @@ function kpg_permalink_finder() {
 
 		// now figure if we need to fix a permalink
 		if ($kpg_pf_find<5) {
-			if( $ID = kpg_find_permalink_post( $plink,$kpg_pf_find ) ) { //check for match	
+			$ID = kpg_find_permalink_post( $plink,$kpg_pf_find );
+			if( $ID>0 )  { //check for match	
 				if ($kpg_pf_stats>'0') {
 					$f404=$updateData['f404']; // keep this in an array of arrays
 					if ($f404==null) $f404=array();
 					$r404[5]=get_permalink( $ID );
-					$n=array_unshift($f404,$r404);
-					while ($n>$kpg_pf_stats) {
-						unset($f404[$kpg_pf_stats]);
-						$n=count($f404);
+					array_unshift($f404,$r404);
+					$n=count($f404);
+					for ($j=0;$j<10;$j++) {
+						if ($n>$kpg_pf_stats) {
+							array_pop($f404);
+							$n=count($f404);
+						}
 					}
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
@@ -129,9 +136,13 @@ function kpg_permalink_finder() {
 		if ($kpg_pf_stats>'0') {
 			$e404=$updateData['e404']; // keep this in an array of arrays
 			if ($e404==null) $e404=array();
-			$n=array_unshift($e404,$r404);
-			if ($n>$kpg_pf_stats) {
-				unset($e404[$kpg_pf_stats]);
+			array_unshift($e404,$r404);
+			$n=count($e404);
+			for ($j=0;$j<10;$j++) {
+				if ($n>$kpg_pf_stats) {
+					unset($e404[$n-1]);
+					$n=count($e404);
+				}
 			}
 			$updateData['e404']=$e404;
 			update_option('kpg_permalinfinder_options', $updateData);
@@ -146,6 +157,11 @@ function kpg_permalink_finder() {
 *	Search Engine Spiders should make note and change index
 *************************************************************/
 function kpg_301_forward( $post_loc ) {
+    // write out a log of what is happening
+	$f = fopen( 'errors.txt', "a" );
+	 fwrite($f,"Error in forward $post_loc \r\n");
+	 fclose($f);
+
 	header( "HTTP/1.1 301 Moved Permanently" );
 	header( "Location: $post_loc" );
 	exit();
@@ -179,7 +195,7 @@ function kpg_find_permalink_post( $plink,$kpg_pf_find ) {
 	   $CNT=$row->CNT;
 	   if ($CNT>=$kpg_pf_find) return $ID;
 	} 
-	return false;
+	return 0;
 }
 
 

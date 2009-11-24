@@ -1,6 +1,6 @@
 <?php
 /*
-	WordPress 2.8 Plugin: Permalink-Finder 1.30 				
+	WordPress 2.8 Plugin: Permalink-Finder 1.21 				
 	Copyright (c) 2009 Keith P. Graham 	
  
 	File Information:  					

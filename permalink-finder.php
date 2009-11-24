@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/permalink-finder/
 Description: When you migrate from another platform to Wordpress, the canonical names of your posts may subtly change. Old links, including Google may throw 404 errors on your permalinks. In order to redirect your valuable links to the new naming structure, you will need some way of locating the poast based on the information available in the old link. Redirects links to index pages and keeps a log of recent 404 errors and redirects.
-Version: 1.30
+Version: 1.21
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 

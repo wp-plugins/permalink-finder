@@ -214,7 +214,7 @@ for ($j=0;$j<count($e404)&&$j<$kpg_pf_stats;$j++ ) {
 	} // end if kpg_pf_stats>0
 ?>
   <br/>
-  Version 1.21 November 3, 2009 (updated 11/16/2009).</p>
+  Version 1.21 November 24, 2009.</p>
 <p>&nbsp; </p>
 <p>This plugin is free to use and I do not want payment for it. <br />
   However, if you find this plugin useful, please visit my websites and, if appropriate, add a link to your blogroll.<br/>

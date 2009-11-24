@@ -72,7 +72,8 @@ function kpg_permalink_finder() {
 						$f404=array();
 					}
 					$r404[5]=$flink;
-					$n=array_unshift($f404,$r404);
+					array_unshift($f404,$r404);
+					$n=count($f404);
 					if ($n>$kpg_pf_stats) {
 						array_pop($f404);
 						$n=count($f404);

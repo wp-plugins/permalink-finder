@@ -4,7 +4,7 @@ Requires at least: 2.0
 Tested up to: 2.9
 Contributors: Keith Graham       
 Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
-Stable tag: 1.20
+Stable tag: 1.21
 
 Detects 404 errors and does a search for pages that partially match the url entered. Redirects to good permalinks or index files.
 
@@ -62,6 +62,9 @@ If you find this plugin useful, please visit my websites and, if appropriate, ad
 
 = 1.20 =
 * 11/04/2009 Added a short log of fixed and unfixed permalinks.
+
+= 1.21 =
+* 11/24/2009 Fixed a bug in recording the permalinks that caused a 500 error. Formatted the urls as links in the report.
 
 == Support ==
 

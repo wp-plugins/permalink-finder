@@ -166,12 +166,18 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 </tr>
 <?php
 for ($j=0;$j<count($f404)&&$j<$kpg_pf_stats;$j++ ) {
+    $f1=$f404[$j][1];
+    $f5=$f404[$j][5];
+    $f2=$f404[$j][2];
+	if (strlen($f1)>32) $f1=substr($f1,32).'...';
+	if (strlen($f5)>32) $f1=substr($f5,32).'...';
+	if (strlen($f2)>32) $f1=substr($f2,32).'...';
 ?>
 <tr>
 <td style="background-color:#FFFFFF"><?php echo $f404[$j][0]; ?></td>
-<td style="background-color:#FFFFFF"><?php echo $f404[$j][1]; ?></td>
-<td style="background-color:#FFFFFF"><?php echo $f404[$j][5]; ?></td>
-<td style="background-color:#FFFFFF"><?php echo $f404[$j][2]; ?></td>
+<td style="background-color:#FFFFFF"><a href="<?php echo $f404[$j][1]; ?>" title="<?php echo $f404[$j][1]; ?>" target="_blank"><?php echo $f1; ?></a></td>
+<td style="background-color:#FFFFFF"><a href="<?php echo $f404[$j][5]; ?>" title="<?php echo $f404[$j][5]; ?>" target="_blank"><?php echo $f5; ?></a></td>
+<td style="background-color:#FFFFFF"><a href="<?php echo $f404[$j][2]; ?>" title="<?php echo $f404[$j][2]; ?>" target="_blank"><?php echo $f2; ?></a></td>
 <td style="background-color:#FFFFFF"><?php echo $f404[$j][3]; ?></td>
 <td style="background-color:#FFFFFF"><?php echo $f404[$j][4]; ?></td>
 </tr>
@@ -208,7 +214,7 @@ for ($j=0;$j<count($e404)&&$j<$kpg_pf_stats;$j++ ) {
 	} // end if kpg_pf_stats>0
 ?>
   <br/>
-  Version 1.20 November 3, 2009 (updated 11/16/2009).</p>
+  Version 1.21 November 3, 2009 (updated 11/16/2009).</p>
 <p>&nbsp; </p>
 <p>This plugin is free to use and I do not want payment for it. <br />
   However, if you find this plugin useful, please visit my websites and, if appropriate, add a link to your blogroll.<br/>

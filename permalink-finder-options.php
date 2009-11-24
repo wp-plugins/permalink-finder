@@ -166,12 +166,15 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 </tr>
 <?php
 for ($j=0;$j<count($f404)&&$j<$kpg_pf_stats;$j++ ) {
+    $f404[$j][1]=urldecode($f404[$j][1]);
+    $f404[$j][5]=urldecode($f404[$j][5]);
+    $f404[$j][2]=urldecode($f404[$j][2]);
     $f1=$f404[$j][1];
     $f5=$f404[$j][5];
     $f2=$f404[$j][2];
-	if (strlen($f1)>32) $f1=substr($f1,32).'...';
-	if (strlen($f5)>32) $f1=substr($f5,32).'...';
-	if (strlen($f2)>32) $f1=substr($f2,32).'...';
+	if (strlen($f1)>32) $f1=substr($f1,0, 32).'...';
+	if (strlen($f5)>32) $f5=substr($f5,0,32).'...';
+	if (strlen($f2)>32) $f2=substr($f2,0,32).'...';
 ?>
 <tr>
 <td style="background-color:#FFFFFF"><?php echo $f404[$j][0]; ?></td>

@@ -159,10 +159,6 @@ function kpg_permalink_finder() {
 *************************************************************/
 function kpg_301_forward( $post_loc ) {
     // write out a log of what is happening
-	$f = fopen( 'errors.txt', "a" );
-	 fwrite($f,"Error in forward $post_loc \r\n");
-	 fclose($f);
-
 	header( "HTTP/1.1 301 Moved Permanently" );
 	header( "Location: $post_loc" );
 	exit();

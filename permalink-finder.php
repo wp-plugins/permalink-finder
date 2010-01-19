@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Permalink Finder
-Plugin URI: http://www.BlogsEye.com/permalink-finder/
+Plugin URI: http://www.BlogsEye.com/
 Description: When you migrate from another platform to Wordpress, the canonical names of your posts may subtly change. Old links, including Google may throw 404 errors on your permalinks. In order to redirect your valuable links to the new naming structure, you will need some way of locating the poast based on the information available in the old link. Redirects links to index pages and keeps a log of recent 404 errors and redirects.
-Version: 1.21
+Version: 1.30
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -194,6 +194,13 @@ function kpg_find_permalink_post( $plink,$kpg_pf_find ) {
 	} 
 	return 0;
 }
+function kpg_permalink_finder_uninstall() {
+	if(!current_user_can('manage_options')) {
+		die('Access Denied');
+	}
+	delete_option('kpg_permalinfinder_options'); 
+	return;
+}
 
 
 /************************************************************
@@ -207,5 +214,8 @@ function kpg_permalink_finder_admin_menu() {
 add_action( 'template_redirect', 'kpg_permalink_finder' );
 // add the the options to the admin menu
 add_action('admin_menu', 'kpg_permalink_finder_admin_menu');
+if ( function_exists('register_uninstall_hook') ) {
+	register_uninstall_hook(__FILE__, 'kpg_permalink_finder_uninstall');
+}
 
 ?>

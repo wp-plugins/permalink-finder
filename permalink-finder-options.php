@@ -1,6 +1,6 @@
 <?php
 /*
-	WordPress 2.8 Plugin: Permalink-Finder 1.21 				
+	WordPress 2.8 Plugin: Permalink-Finder 1.30 				
 	Copyright (c) 2009 Keith P. Graham 	
  
 	File Information:  					
@@ -201,30 +201,36 @@ for ($j=0;$j<count($f404)&&$j<$kpg_pf_stats;$j++ ) {
 </tr>
 <?php
 for ($j=0;$j<count($e404)&&$j<$kpg_pf_stats;$j++ ) {
+    $e404[$j][1]=urldecode($e404[$j][1]);
+    $e404[$j][2]=urldecode($e404[$j][2]);
+    $f1=$e404[$j][1];
+    $f2=$e404[$j][2];
+	if (strlen($f1)>32) $f1=substr($f1,0, 32).'...';
+	if (strlen($f2)>32) $f2=substr($f2,0,32).'...';
 ?>
 <tr>
 <td style="background-color:#FFFFFF"><?php echo $e404[$j][0]; ?></td>
-<td style="background-color:#FFFFFF"><?php echo $e404[$j][1]; ?></td>
-<td style="background-color:#FFFFFF"><?php echo $e404[$j][2]; ?></td>
+<td style="background-color:#FFFFFF"><a href="<?php echo $f404[$j][1]; ?>" title="<?php echo $f404[$j][1]; ?>" target="_blank"><?php echo $f1; ?></td>
+<td style="background-color:#FFFFFF"><a href="<?php echo $e404[$j][2]; ?>" title="<?php echo $e404[$j][2]; ?>" target="_blank"><?php echo $f2; ?></a></td>
 <td style="background-color:#FFFFFF"><?php echo $e404[$j][3]; ?></td>
 <td style="background-color:#FFFFFF"><?php echo $e404[$j][4]; ?></td>
 </tr>
 <?php } ?>
 </table>
-<p>
+
   <?php
 		}
 	} // end if kpg_pf_stats>0
 ?>
   <br/>
-  Version 1.21 November 24, 2009.</p>
+<p>Version 1.30 January 19, 2010.</p>
 <p>&nbsp; </p>
 <p>This plugin is free to use and I do not want payment for it. <br />
   However, if you find this plugin useful, please visit my websites and, if appropriate, add a link to your blogroll.<br/>
 <a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a><br/>
 <a href="http://www.freenameastar.com/">Name a real star for free</a><br/>
 <a href="http://www.jt30.com/">Amplified Blues Harmonica</a><br/>
-or visit the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">National Wildlife Federation</a>. </p>
+or visit and donate at the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">National Wildlife Federation</a>. </p>
 
 </div>
 <?php 

@@ -1,10 +1,10 @@
 === Permalink Finder Plugin ===
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo, forward, index file, blogger, blogspot       
 Requires at least: 2.0       
-Tested up to: 2.9
+Tested up to: 2.9.1
 Contributors: Keith Graham       
 Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
-Stable tag: 1.21
+Stable tag: 1.30
 
 Detects 404 errors and does a search for pages that partially match the url entered. Redirects to good permalinks or index files.
 
@@ -23,7 +23,6 @@ Optionally, the plugin will redirect hits on index.html, index.htm, and index.sh
 
 The plugin will also optionally keep track of the last few 404's or redirects. This is useful to find out what pages are missing or named badly that keep causing 404 errors or forcing redirects.
 
-Known issues: Since the plugin issues a redirect, it is possible that a badly written template or another plugin might already have written to the buffer. I have seen errors in other modules also cause this failure. If you get a <i>Warning: cannot modify header information error</i>, you may have to disable this plugin until the underlying error has been resolved.
 
 Donations:
 If you find this plugin useful, please visit my websites and, if appropriate, add a link to one on your blog: 
@@ -41,11 +40,6 @@ or visit the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.dona
 4. Change any options in the Permalink Finder settings.
 The plugin can be tested by adding or deleting words from a working permalink in your browser address area. Even if you mangle the permalink it should find a valid link and almost always it will find the correct link. 
 
-Donations:
-If you find this plugin useful, please visit my websites and, if appropriate, add a link to one on your blog: 
-<a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a>
-<a href="http://www.freenameastar.com/">Name a real star for free</a>
-<a href="http://www.jt30.com/">Amplified Blues Harmonica</a>
 
 == Changelog ==
 
@@ -66,6 +60,9 @@ If you find this plugin useful, please visit my websites and, if appropriate, ad
 = 1.21 =
 * 11/24/2009 Fixed a bug in recording the permalinks that caused a 500 error. Formatted the urls as links in the report.
 
+= 1.30 =
+* 01/10/2010 added uninstall procedure. Add links to 404 area of report.
+
 == Support ==
 
-This plugin is in active development. All feedback is welcome on <a href="http://www.blogseye.com/permalink-finder-plugin" title="Wordpress plugin: Permalinks Finder Plugin">My Wordpress and other program development</a>.
+This plugin is in active development. All feedback is welcome on <a href="http://www.blogseye.com/" title="Wordpress plugin: Permalinks Finder Plugin">My Wordpress and other program development</a>.

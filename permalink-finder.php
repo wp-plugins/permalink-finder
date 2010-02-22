@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/
 Description: When you migrate from another platform to Wordpress, the canonical names of your posts may subtly change. Old links, including Google may throw 404 errors on your permalinks. In order to redirect your valuable links to the new naming structure, you will need some way of locating the poast based on the information available in the old link. Redirects links to index pages and keeps a log of recent 404 errors and redirects.
-Version: 1.30
+Version: 1.40
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -23,34 +23,39 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *************************************************************/
 function kpg_permalink_finder() {
 	if( is_404() ) {
-		// record any pertanent data
-		// get the configuration
+		// get the repository flags and data
+		$kpg_pf_find='2'; 
+		$kpg_pf_index='N';
+		$kpg_pf_stats='0';
+		$kpg_pf_labels='N';
+		$e404=array();
+		$f404=array();
 		$updateData=get_option('kpg_permalinfinder_options');
 		if ($updateData==null) $updateData=array();
-		$kpg_pf_labels=$updateData['labels'];
-		if ($kpg_pf_labels==null) $kpg_pf_labels='';
-		if ($kpg_pf_labels!='') $kpg_pf_labels='Y';
-
-		$kpg_pf_find=$updateData['find']; // used to tell if permalink fixing is going on
-		if ($kpg_pf_find==null) $kpg_pf_find='2';
+		if (array_key_exists('find',$updateData) ) $kpg_pf_find=$updateData['find'];
+		if (array_key_exists('index',$updateData) ) $kpg_pf_index=$updateData['index'];
+		if (array_key_exists('stats',$updateData) ) $kpg_pf_stats=$updateData['stats'];
+		if (array_key_exists('labels',$updateData) ) $kpg_pf_labels=$updateData['labels'];
+		// check data and set defaults
 		if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
 			$kpg_pf_find='2';
 		}
-		$kpg_pf_index=$updateData['index']; // used to tell if we are redirecting index pages
-		if ($kpg_pf_index==null) $kpg_pf_index='';
-		if ($kpg_pf_index!='') $kpg_pf_index='Y';
-		$kpg_pf_stats = $updateData['stats'];
-		if ($kpg_pf_stats==null) $kpg_pf_stats='10';
+		if ($kpg_pf_index!='Y' && $kpg_pf_index!='N') $kpg_pf_index='N';
+		if ($kpg_pf_labels!='Y' && $kpg_pf_labels!='N') $kpg_pf_labels='N';
 		if ($kpg_pf_stats!='10' && $kpg_pf_stats!='20' && $kpg_pf_stats!='30') {
 			$kpg_pf_stats='0';
 		}
+		if (array_key_exists('e404',$updateData) ) $e404=$updateData['e404']; 
+		if (array_key_exists('f404',$updateData) ) $f404=$updateData['f404']; 
+		
+		// record any pertanent data
 		if ($kpg_pf_stats>'0') {
-		$r404=array();
-			$r404[0]=date('m/d/Y H:i:s');
-			$r404[1]=$_SERVER['REQUEST_URI'];
-			$r404[2]=html_entity_decode($_SERVER['HTTP_REFERER']);
-			$r404[3]=$_SERVER['HTTP_USER_AGENT'];
-			$r404[4]=$_SERVER['REMOTE_ADDR'];
+			$r404=array();
+				$r404[0]=date('m/d/Y H:i:s');
+				$r404[1]=$_SERVER['REQUEST_URI'];
+				$r404[2]=html_entity_decode($_SERVER['HTTP_REFERER']);
+				$r404[3]=$_SERVER['HTTP_USER_AGENT'];
+				$r404[4]=$_SERVER['REMOTE_ADDR'];
 		}
 
 		$plink = basename( $_SERVER['REQUEST_URI'] ); // flink has full url that was missed
@@ -67,16 +72,13 @@ function kpg_permalink_finder() {
 				$flink=str_replace(' ','-',$flink); // spaces are wrong
 				$flink=str_replace('%20','-',$flink); // spaces are wrong
 				if ($kpg_pf_stats>'0') {
-					$f404=$updateData['f404']; // keep this in an array of arrays
-					if ($f404==null) {
-						$f404=array();
-					}
 					$r404[5]=$flink;
 					array_unshift($f404,$r404);
-					$n=count($f404);
-					if ($n>$kpg_pf_stats) {
-						array_pop($f404);
+					for ($j=0;$j<10;$j++) {
 						$n=count($f404);
+						if ($n>$kpg_pf_stats) {
+							array_pop($f404);
+						}
 					}
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
@@ -90,23 +92,19 @@ function kpg_permalink_finder() {
 		if ($kpg_pf_index=='Y') { // quick check to see if we are accessing an index page
 			if ($plink=='index.html'||$plink=='index.htm'||$plink=='index.shtml'||$plink=='default.asp') {
 				if ($kpg_pf_stats>'0') {
-					$f404=$updateData['f404']; // keep this in an array of arrays
-					if ($f404==null) {
-						$f404=array();
-					}
 					$r404[5]=get_bloginfo('url');
 					array_unshift($f404,$r404);
-					$n=count($f404);
 					for ($j=0;$j<10;$j++) {
+						$n=count($f404);
 						if ($n>$kpg_pf_stats) {
 							array_pop($f404);
-							$n=count($f404);
 						}
 					}
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
 				}
 				kpg_301_forward(get_bloginfo('url'));
+				return;
 			}
 		}
 
@@ -115,34 +113,29 @@ function kpg_permalink_finder() {
 			$ID = kpg_find_permalink_post( $plink,$kpg_pf_find );
 			if( $ID>0 )  { //check for match	
 				if ($kpg_pf_stats>'0') {
-					$f404=$updateData['f404']; // keep this in an array of arrays
-					if ($f404==null) $f404=array();
 					$r404[5]=get_permalink( $ID );
 					array_unshift($f404,$r404);
-					$n=count($f404);
 					for ($j=0;$j<10;$j++) {
+						$n=count($f404);
 						if ($n>$kpg_pf_stats) {
 							array_pop($f404);
-							$n=count($f404);
 						}
 					}
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
-				}
+				} 
+				
 				kpg_301_forward( get_permalink( $ID ) ); // if match forward it.
-				return false;
+				return;
 			}
 		}
 		// still here, it must be a real 404, we should log it
 		if ($kpg_pf_stats>'0') {
-			$e404=$updateData['e404']; // keep this in an array of arrays
-			if ($e404==null) $e404=array();
 			array_unshift($e404,$r404);
-			$n=count($e404);
 			for ($j=0;$j<10;$j++) {
+				$n=count($e404);
 				if ($n>$kpg_pf_stats) {
 					unset($e404[$n-1]);
-					$n=count($e404);
 				}
 			}
 			$updateData['e404']=$e404;

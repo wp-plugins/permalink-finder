@@ -4,7 +4,7 @@ Requires at least: 2.0
 Tested up to: 2.9.1
 Contributors: Keith Graham       
 Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
-Stable tag: 1.30
+Stable tag: 1.40
 
 Detects 404 errors and does a search for pages that partially match the url entered. Redirects to good permalinks or index files.
 
@@ -22,6 +22,8 @@ The configuration panel allows a user to select how the plugin finds a missing p
 Optionally, the plugin will redirect hits on index.html, index.htm, and index.shtml to the blog home page. This is useful when a website previously used a non-php home page.
 
 The plugin will also optionally keep track of the last few 404's or redirects. This is useful to find out what pages are missing or named badly that keep causing 404 errors or forcing redirects.
+
+Note: The permalink structure on your blog must be set to include postname. This plugin is only for use with postname permalink structures.
 
 
 Donations:
@@ -62,6 +64,9 @@ The plugin can be tested by adding or deleting words from a working permalink in
 
 = 1.30 =
 * 01/10/2010 added uninstall procedure. Add links to 404 area of report.
+
+= 1.40 =
+* 02/23/2010 Fixed errors setting and unsetting variables.
 
 == Support ==
 

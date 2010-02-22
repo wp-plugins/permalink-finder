@@ -1,6 +1,6 @@
 <?php
 /*
-	WordPress 2.8 Plugin: Permalink-Finder 1.30 				
+	WordPress 2.8 Plugin: Permalink-Finder 1.40 				
 	Copyright (c) 2009 Keith P. Graham 	
  
 	File Information:  					
@@ -13,32 +13,41 @@
 if(!current_user_can('manage_options')) {
 	die('Access Denied');
 }
-
-$kpg_pf_find='2';
-$kpg_pf_index='Y';
+// defaults if value on update is null
+$kpg_pf_find='2'; 
+$kpg_pf_index='N';
 $kpg_pf_stats='0';
-$kpg_pf_labels='Y';
+$kpg_pf_labels='N';
+$e404=array();
+$f404=array();
 
 // see if we are getting anything from the admin update post.
 if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	// data:
 	//		kpg_pf_find: this is a radio box that indicates if the finder should be working or not default = true
-	$kpg_pf_find = $_POST['kpg_pf_find'];
-	if ($kpg_pf_find==null) $kpg_pf_find='2';
+	if (array_key_exists('kpg_pf_find',$_POST) ){
+		$kpg_pf_find = $_POST['kpg_pf_find'];
+	}
+	// kpg_pf_find is 999,1,2,3, or 4
 	if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
 		$kpg_pf_find='2';
 	}
 	//		kpg_pf_index: fix up incoming hits with index.html 
-	$kpg_pf_index = $_POST['kpg_pf_index'];
-	if ($kpg_pf_index==null) $kpg_pf_index='';
-	if ($kpg_pf_index!='') $kpg_pf_index='Y';
+	if (array_key_exists('kpg_pf_index',$_POST) ){
+		$kpg_pf_index = $_POST['kpg_pf_index'];
+	}
+	if ($kpg_pf_index!='Y' && $kpg_pf_index!='N') $kpg_pf_index='N';
 	//		kpg_pf_labels: fix up blogger labels folder 
-	$kpg_pf_labels = $_POST['kpg_pf_labels'];
-	if ($kpg_pf_labels==null) $kpg_pf_labels='';
-	if ($kpg_pf_labels!='') $kpg_pf_labels='Y';
+	if (array_key_exists('kpg_pf_labels',$_POST)) {
+		$kpg_pf_labels = $_POST['kpg_pf_labels'];
+	}
+	// labels can be Y or N
+	if ($kpg_pf_labels!='Y' && $kpg_pf_labels!='N') $kpg_pf_labels='N';
 	//		kpg_pf_stats: this is a radio box that indicates if the finder should be working or not default = true
-	$kpg_pf_stats = $_POST['kpg_pf_stats'];
-	if ($kpg_pf_stats==null) $kpg_pf_stats='0';
+	if (array_key_exists('kpg_pf_stats',$_POST) ){
+		$kpg_pf_stats = $_POST['kpg_pf_stats'];
+	}
+	// stats van be 0,10,20, or 30
 	if ($kpg_pf_stats!='10' && $kpg_pf_stats!='20' && $kpg_pf_stats!='30') {
 		$kpg_pf_stats='0';
 	}
@@ -52,8 +61,8 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	$updateData['labels']=$kpg_pf_labels;
 	if ($kpg_pf_stats=='0') { 
 		// clear out any statistics
-		unset($updateData['f404']);
-		unset($updateData['e404']);
+		if (array_key_exists('f404',$updateData) ) unset($updateData['f404']);
+		if (array_key_exists('e404',$updateData) ) unset($updateData['e404']);
 	}
 	// save the results in repository
 	update_option('kpg_permalinfinder_options', $updateData);
@@ -70,31 +79,22 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	// not deactivating and we have finished with any updates or housekeeping - get the variables and show them on the form
 	$updateData=get_option('kpg_permalinfinder_options');
 	if ($updateData==null) $updateData=array();
-	$kpg_pf_find=$updateData['find'];
-	$kpg_pf_index=$updateData['index'];
-	$kpg_pf_labels=$updateData['labels'];
+	if (array_key_exists('find',$updateData) ) $kpg_pf_find=$updateData['find'];
+	if (array_key_exists('index',$updateData) ) $kpg_pf_index=$updateData['index'];
+	if (array_key_exists('stats',$updateData) ) $kpg_pf_stats=$updateData['stats'];
+	if (array_key_exists('labels',$updateData) ) $kpg_pf_labels=$updateData['labels'];
 	// check data and set defaults
-	if ($kpg_pf_find==null) $kpg_pf_find='2';
 	if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
 		$kpg_pf_find='2';
 	}
-	if ($kpg_pf_index==null) $kpg_pf_index='';
-	if ($kpg_pf_index!='') $kpg_pf_index='Y';
-	
-	if ($kpg_pf_labels==null) $kpg_pf_labels='';
-	if ($kpg_pf_labels!='') $kpg_pf_labels='Y';
-	
-	$kpg_pf_stats = $updateData['stats'];
-	if ($kpg_pf_stats==null) $kpg_pf_stats='0';
+	if ($kpg_pf_index!='Y' && $kpg_pf_index!='N') $kpg_pf_index='N';
+	if ($kpg_pf_labels!='Y' && $kpg_pf_labels!='N') $kpg_pf_labels='N';
 	if ($kpg_pf_stats!='10' && $kpg_pf_stats!='20' && $kpg_pf_stats!='30') {
 		$kpg_pf_stats='0';
 	}
 	
-	
-	$e404=$updateData['e404']; 
-	if ($e404==null) $e404=array();
-	$f404=$updateData['f404']; 
-	if ($f404==null) $f404=array();
+	if (array_key_exists('e404',$updateData) ) $e404=$updateData['e404']; 
+	if (array_key_exists('f404',$updateData) ) $f404=$updateData['f404']; 
 ?>
 
 <div class="wrap">
@@ -102,7 +102,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 
 <form method="post" action="">
 <input type="hidden" name="action" value="update" />
-<input type="hidden" name="page_options" value="Submit,kpg_pf_find,kpg_pf_index" />
+<input type="hidden" name="page_options" value="Submit,kpg_pf_find,kpg_pf_index,action" />
 
 <?php wp_nonce_field('update-options'); ?>
 <table class="form-table">
@@ -223,14 +223,14 @@ for ($j=0;$j<count($e404)&&$j<$kpg_pf_stats;$j++ ) {
 	} // end if kpg_pf_stats>0
 ?>
   <br/>
-<p>Version 1.30 January 19, 2010.</p>
+<p>Version 1.40 February 23, 2010.</p>
 <p>&nbsp; </p>
 <p>This plugin is free to use and I do not want payment for it. <br />
   However, if you find this plugin useful, please visit my websites and, if appropriate, add a link to your blogroll.<br/>
 <a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a><br/>
 <a href="http://www.freenameastar.com/">Name a real star for free</a><br/>
 <a href="http://www.jt30.com/">Amplified Blues Harmonica</a><br/>
-or visit and donate at the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">National Wildlife Federation</a>. </p>
+or visit and donate at <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">The National Wildlife Federation</a>. </p>
 
 </div>
 <?php 

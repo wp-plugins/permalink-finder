@@ -1,12 +1,13 @@
 === Permalink Finder Plugin ===
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo, forward, index file, blogger, blogspot       
-Requires at least: 2.0       
+Requires at least: 2.0  
+Stable tag: 1.50     
 Tested up to: 2.9.1
 Contributors: Keith Graham       
 Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
-Stable tag: 1.40
 
-Detects 404 errors and does a search for pages that partially match the url entered. Redirects to good permalinks or index files.
+
+Never get a 404 page not found again. If you have restructured or moved your blog, this plugin will find the right post or page every time.
 
 == Description ==
 
@@ -67,6 +68,9 @@ The plugin can be tested by adding or deleting words from a working permalink in
 
 = 1.40 =
 * 02/23/2010 Fixed errors setting and unsetting variables.
+
+= 1.50 =
+* 04/29/2010 Changed redirect method for to make the plugin compatible with future versions of Wordpress.
 
 == Support ==
 

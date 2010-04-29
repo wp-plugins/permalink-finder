@@ -2,8 +2,8 @@
 /*
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/
-Description: When you migrate from another platform to Wordpress, the canonical names of your posts may subtly change. Old links, including Google may throw 404 errors on your permalinks. In order to redirect your valuable links to the new naming structure, you will need some way of locating the poast based on the information available in the old link. Redirects links to index pages and keeps a log of recent 404 errors and redirects.
-Version: 1.40
+Description: Never get a 404 page not found again. If you have restructured or moved your blog, this plugin will find the right post or page every time.
+Version: 1.50
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -28,14 +28,24 @@ function kpg_permalink_finder() {
 		$kpg_pf_index='N';
 		$kpg_pf_stats='0';
 		$kpg_pf_labels='N';
+		$kpg_pf_oldcat='';
+		$kpg_pf_newcat='';
+		$kpg_pf_oldtag='';
+		$kpg_pf_newtag='';
 		$e404=array();
 		$f404=array();
 		$updateData=get_option('kpg_permalinfinder_options');
 		if ($updateData==null) $updateData=array();
+		if (!is_array($updateData)) $updateData=array();
 		if (array_key_exists('find',$updateData) ) $kpg_pf_find=$updateData['find'];
 		if (array_key_exists('index',$updateData) ) $kpg_pf_index=$updateData['index'];
 		if (array_key_exists('stats',$updateData) ) $kpg_pf_stats=$updateData['stats'];
 		if (array_key_exists('labels',$updateData) ) $kpg_pf_labels=$updateData['labels'];
+		// working on this - holding off installing right now
+		if (array_key_exists('oldtag',$updateData) ) $kpg_pf_oldtag=$updateData['oldtag'];
+		if (array_key_exists('newtag',$updateData) ) $kpg_pf_newtag=$updateData['newtag'];
+		if (array_key_exists('oldcat',$updateData) ) $kpg_pf_oldcat=$updateData['oldcat'];
+		if (array_key_exists('newcat',$updateData) ) $kpg_pf_newcat=$updateData['newcat'];
 		// check data and set defaults
 		if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
 			$kpg_pf_find='2';
@@ -83,8 +93,10 @@ function kpg_permalink_finder() {
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
 				}
-				kpg_301_forward($flink);
-				return;
+				wp_redirect($flink,"301"); // let wp do it - more compatable.
+				exit();
+				//kpg_301_forward($flink);
+				//return;
 			}
 		}
 		
@@ -103,8 +115,10 @@ function kpg_permalink_finder() {
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
 				}
-				kpg_301_forward(get_bloginfo('url'));
-				return;
+				wp_redirect(get_bloginfo('url'),"301"); // let wp do it - more compatable.
+				exit();
+				//kpg_301_forward(get_bloginfo('url'));
+				//return;
 			}
 		}
 
@@ -124,9 +138,10 @@ function kpg_permalink_finder() {
 					$updateData['f404']=$f404;
 					update_option('kpg_permalinfinder_options', $updateData);
 				} 
-				
-				kpg_301_forward( get_permalink( $ID ) ); // if match forward it.
-				return;
+				wp_redirect(get_permalink( $ID ),"301"); // let wp do it - more compatable.
+				exit();
+				//kpg_301_forward( get_permalink( $ID ) ); // if match forward it.
+				// return;
 			}
 		}
 		// still here, it must be a real 404, we should log it

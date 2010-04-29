@@ -55,6 +55,7 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	// out in data array
 	$updateData=get_option('kpg_permalinfinder_options');
 	if ($updateData==null) $updateData=array();
+	if (!is_array($updateData)) $updateData=array();
 	$updateData['find']=$kpg_pf_find;
 	$updateData['index']=$kpg_pf_index;
 	$updateData['stats']=$kpg_pf_stats;
@@ -79,10 +80,11 @@ if(!empty($_POST['Submit'])) { // we have a post - need to change some options
 	// not deactivating and we have finished with any updates or housekeeping - get the variables and show them on the form
 	$updateData=get_option('kpg_permalinfinder_options');
 	if ($updateData==null) $updateData=array();
-	if (array_key_exists('find',$updateData) ) $kpg_pf_find=$updateData['find'];
-	if (array_key_exists('index',$updateData) ) $kpg_pf_index=$updateData['index'];
-	if (array_key_exists('stats',$updateData) ) $kpg_pf_stats=$updateData['stats'];
-	if (array_key_exists('labels',$updateData) ) $kpg_pf_labels=$updateData['labels'];
+	if (!is_array($updateData)) $updateData=array();
+	if (array_key_exists('find',$updateData)) $kpg_pf_find=$updateData['find'];
+	if (array_key_exists('index',$updateData)) $kpg_pf_index=$updateData['index'];
+	if (array_key_exists('stats',$updateData)) $kpg_pf_stats=$updateData['stats'];
+	if (array_key_exists('labels',$updateData)) $kpg_pf_labels=$updateData['labels'];
 	// check data and set defaults
 	if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
 		$kpg_pf_find='2';
@@ -223,16 +225,47 @@ for ($j=0;$j<count($e404)&&$j<$kpg_pf_stats;$j++ ) {
 	} // end if kpg_pf_stats>0
 ?>
   <br/>
-<p>Version 1.40 February 23, 2010.</p>
-<p>&nbsp; </p>
-<p>This plugin is free to use and I do not want payment for it. <br />
-  However, if you find this plugin useful, please visit my websites and, if appropriate, add a link to your blogroll.<br/>
-<a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a><br/>
-<a href="http://www.freenameastar.com/">Name a real star for free</a><br/>
-<a href="http://www.jt30.com/">Amplified Blues Harmonica</a><br/>
-or visit and donate at <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">The National Wildlife Federation</a>. </p>
+<hr/>  
+<h3>If you like this plugin, why not try out these other interesting plugins.</h3>
+<?php
+// list of plugins
+$p=array(
+"facebook-open-graph-widget"=>"The easiest way to add a Facebook Like buttons to your blog' sidebar",
+"threat-scan-plugin"=>"Check your blog for virus, trojans, malicious software and other threats",
+"open-in-new-window-plugin"=>"Keep your surfers. Open all external links in a new window",
+"youtube-poster-plugin"=>"Automagically add YouTube videos as posts. All from inside the plugin. Painless, no heavy lifting.",
+"permalink-finder"=>"Never get a 404 again. If you have restructured or moved your blog, this plugin will find the right post or page every time",
+);
+  $f=$_SERVER["REQUEST_URI"];
+  // get the php out
+  $ff=explode('page=',$f);
+  $f=$ff[1];
+  $ff=explode('/',$f);
+  $f=$ff[0];
+  foreach ($p as $key=>$data) {
+	if ($f!=$key) { 
+	$kk=urlencode($key);
+		?><p>&bull;<span style="font-weight:bold;"> <?PHP echo $key ?>: </span> <a href="plugin-install.php?tab=plugin-information&plugin=<?PHP echo $kk ?>&TB_iframe=true&width=640&height=669">Install Plugin</a> - <span style="font-style:italic;font-weight:bold;"><?PHP echo $data ?></span></p><?PHP 
+	}
+  }
+?>
 
+
+<hr/>
+<p>This plugin is free and I expect nothing in return. 
+However, a link on your blog to one of my personal sites would be appreciated.</p>
+</p>
+<p>Keith Graham</p>
+<p>
+	<a href="http://www.cthreepo.com/blog" target="_blank">Wandering Blog </a>(My personal Blog) <br />
+	<a href="http://www.cthreepo.com" target="_blank">Resources for Science Fiction</a> (Writing Science Fiction) <br />
+	<a href="http://www.jt30.com" target="_blank">The JT30 Page</a> (Amplified Blues Harmonica) <br />
+	<a href="http://www.harpamps.com" target="_blank">Harp Amps</a> (Vacuum Tube Amplifiers for Blues) <br />
+	<a href="http://www.blogseye.com" target="_blank">Blog's Eye</a> (PHP coding) <br />
+	<a href="http://www.cthreepo.com/bees" target="_blank">Bee Progress Beekeeping Blog</a> (My adventures as a new beekeeper) </p>
 </div>
+
+
 <?php 
 
 } // end if end-install else

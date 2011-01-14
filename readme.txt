@@ -1,8 +1,8 @@
 === Permalink Finder Plugin ===
-Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo, forward, index file, blogger, blogspot       
-Requires at least: 2.0  
-Stable tag: 1.50     
-Tested up to: 2.9.1
+Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo, forward, index file, blogger, blogspot, MU      
+Requires at least: 2.8  
+Stable tag: 1.60     
+Tested up to: 3.1
 Contributors: Keith Graham       
 Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
 
@@ -23,6 +23,9 @@ The configuration panel allows a user to select how the plugin finds a missing p
 Optionally, the plugin will redirect hits on index.html, index.htm, and index.shtml to the blog home page. This is useful when a website previously used a non-php home page.
 
 The plugin will also optionally keep track of the last few 404's or redirects. This is useful to find out what pages are missing or named badly that keep causing 404 errors or forcing redirects.
+
+On Wordpress MU networked installations the plugin can be installed as a network plugin. On Blog #1, the settings can be made so that all other networked blogs will not see the settings. The statistics then will only be visible on the main blog (#1). 
+
 
 Note: The permalink structure on your blog must be set to include postname. This plugin is only for use with postname permalink structures.
 
@@ -71,6 +74,10 @@ The plugin can be tested by adding or deleting words from a working permalink in
 
 = 1.50 =
 * 04/29/2010 Changed redirect method for to make the plugin compatible with future versions of Wordpress.
+
+= 1.60 =
+* 01/14/2011 Cleaned up code. Added support for MU. Used wordpress functions to sanitize urls and find alternate encodings.
+* This revision changed the way the plugin works, so please let me know if you experience any problems.
 
 == Support ==
 

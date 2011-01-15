@@ -24,6 +24,7 @@ $f404=array();
 // get the options file
 $options=get_option('kpg_permalinfinder_options');
 if (empty($options)) $options=array();
+if (!is_array($options)) $options=array();
 // set all the params
 if (array_key_exists('find',$options)) $kpg_pf_find=$options['find'];
 if (array_key_exists('index',$options)) $kpg_pf_index=$options['index'];

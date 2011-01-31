@@ -1,7 +1,7 @@
 === Permalink Finder Plugin ===
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo, forward, index file, blogger, blogspot, MU      
 Requires at least: 2.8  
-Stable tag: 1.60     
+Stable tag: 1.70     
 Tested up to: 3.1
 Contributors: Keith Graham       
 Donate link: https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1
@@ -31,11 +31,14 @@ Note: The permalink structure on your blog must be set to include postname. This
 
 
 Donations:
-If you find this plugin useful, please visit my websites and, if appropriate, add a link to one on your blog: 
-<a href="http://www.cthreepo.com/">Resources for Science Fiction Writers</a>
-<a href="http://www.freenameastar.com/">Name a real star for free</a>
-<a href="http://www.jt30.com/">Amplified Blues Harmonica</a>
-or visit the <a href="https://online.nwf.org/site/Donation2?df_id=6620&6620.donation=form1">National Wildlife Federation</a>.
+If you find this plugin useful and you wish to support me, you can buy my book (cheap) <a href="http://www.amazon.com/gp/product/1456336584?ie=UTF8&tag=thenewjt30page&linkCode=as2&camp=1789&creative=390957&creativeASIN=1456336584">Error Message Eyes: A Programmer's Guide to the Digital Soul</a>
+At the very least please visit my websites and, if appropriate, add a link to one on your blog: 
+<a href="http://www.blogseye.com" target="_blank">Blog&apos;s Eye</a> (My Wordpress Plugins and other PHP coding projects) <br />
+<a href="http://www.cthreepo.com/blog" target="_blank">Wandering Blog </a>(My personal Blog) <br />
+<a href="http://www.cthreepo.com" target="_blank">Resources for Science Fiction</a> (Writing Science Fiction) <br />
+<a href="http://www.jt30.com" target="_blank">The JT30 Page</a> (Amplified Blues Harmonica) <br />
+<a href="http://www.harpamps.com" target="_blank">Harp Amps</a> (Vacuum Tube Amplifiers for Blues) <br />
+<a href="http://www.cthreepo.com/bees" target="_blank">Bee Progress Beekeeping Blog</a> (My adventures as a new beekeeper) </p>
 
 
 == Installation ==
@@ -79,6 +82,18 @@ The plugin can be tested by adding or deleting words from a working permalink in
 * 01/14/2011 Cleaned up code. Added support for MU. Used wordpress functions to sanitize urls and find alternate encodings.
 * This revision changed the way the plugin works, so please let me know if you experience any problems.
 
-== Support ==
+= 1.70 =
+* Due to many suggestions for features: Added code to strip get parameters like UTM tags. Added code to optionally strip numbers, common words, and short words.
 
-This plugin is in active development. All feedback is welcome on <a href="http://www.blogseye.com/" title="Wordpress plugin: Permalinks Finder Plugin">My Wordpress and other program development</a>.
+== Support ==
+This plugin is free and I expect nothing in return. If you wisht to support my programming, buy my book: 
+<a href="http://www.amazon.com/gp/product/1456336584?ie=UTF8&tag=thenewjt30page&linkCode=as2&camp=1789&creative=390957&creativeASIN=1456336584">Error Message Eyes: A Programmer's Guide to the Digital Soul</a>
+Other plugins:
+<a href="http://wordpress.org/extend/plugins/open-in-new-window-plugin/">Open in New Window Plugin</a>
+<a href="http://wordpress.org/extend/plugins/kindle-this/">Kindle This - publish blog to user's Kindle</a>
+<a href="http://wordpress.org/extend/plugins/stop-spammer-registrations-plugin/">Stop Spammer Registrations Plugin</a>
+<a href="http://wordpress.org/extend/plugins/no-right-click-images-plugin/">No Right Click Images Plugin</a>
+<a href="http://wordpress.org/extend/plugins/collapse-page-and-category-plugin/">Collapse Page and Category Plugin</a>
+<a href="http://wordpress.org/extend/plugins/custom-post-type-list-widget/">Custom Post Type List Widget</a>
+<a href="http://wordpress.org/extend/plugins/permalink-finder/">Permalink Finder Plugin</a>
+

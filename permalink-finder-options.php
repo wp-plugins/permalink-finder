@@ -1,6 +1,6 @@
 <?php
 /*
-	WordPress 3.1 Plugin: Permalink-Finder 1.60 				
+	WordPress 3.1 Plugin: Permalink-Finder 1.70 				
 	Copyright (c) 2011 Keith P. Graham 	
  
 	File Information:  					
@@ -18,6 +18,9 @@ $kpg_pf_find='2';
 $kpg_pf_index='N';
 $kpg_pf_stats='0';
 $kpg_pf_labels='N';
+$kpg_pf_short='N'; // new with 1.7
+$kpg_pf_numbs='N'; // new with 1.7
+$kpg_pf_common='N'; // new with 1.7
 $kpg_pf_mu='Y';
 $e404=array();
 $f404=array();
@@ -31,6 +34,17 @@ if (array_key_exists('index',$options)) $kpg_pf_index=$options['index'];
 if (array_key_exists('stats',$options)) $kpg_pf_stats=$options['stats'];
 if (array_key_exists('labels',$options)) $kpg_pf_labels=$options['labels'];
 if (array_key_exists('mu',$options)) $kpg_pf_mu=$options['mu'];
+if (array_key_exists('kpg_pf_short',$options) ) $kpg_pf_short=$options['kpg_pf_short'];
+if (array_key_exists('kpg_pf_numbs',$options) ) $kpg_pf_numbs=$options['kpg_pf_numbs'];
+if (array_key_exists('kpg_pf_common',$options) ) $kpg_pf_common=$options['kpg_pf_common'];
+if ($kpg_pf_index!='Y' && $kpg_pf_index!='N') $kpg_pf_index='N';
+if ($kpg_pf_labels!='Y' && $kpg_pf_labels!='N') $kpg_pf_labels='N';
+if ($kpg_pf_short!='Y' && $kpg_pf_short!='N') $kpg_pf_short='N';
+if ($kpg_pf_common!='Y' && $kpg_pf_common!='N') $kpg_pf_common='N';
+if ($kpg_pf_numbs!='Y' && $kpg_pf_numbs!='N') $kpg_pf_numbs='N';
+if ($kpg_pf_stats!='10' && $kpg_pf_stats!='20' && $kpg_pf_stats!='30') {
+	$kpg_pf_stats='0';
+}
 // history files
 if (array_key_exists('e404',$options) ) $e404=$options['e404']; 
 if (array_key_exists('f404',$options) ) $f404=$options['f404']; 
@@ -64,6 +78,29 @@ if(!empty($_POST['Submit'])&&wp_verify_nonce($_POST['kpg_pf_nonce'],'kpg_pf') ) 
 
 	// labels can be Y or N
 	if ($kpg_pf_labels!='Y' && $kpg_pf_labels!='N') $kpg_pf_labels='N';
+	// numbers, common and short options
+	
+	
+	if (array_key_exists('kpg_pf_common',$_POST)) {
+		$kpg_pf_common = $_POST['kpg_pf_common'];
+	} else {
+		$kpg_pf_common='N';
+	}
+	if ($kpg_pf_common!='Y' && $kpg_pf_common!='N') $kpg_pf_common='N';
+	
+	if (array_key_exists('kpg_pf_short',$_POST)) {
+		$kpg_pf_short = $_POST['kpg_pf_short'];
+	} else {
+		$kpg_pf_short='N';
+	}
+	if ($kpg_pf_short!='Y' && $kpg_pf_short!='N') $kpg_pf_short='N';
+	if (array_key_exists('kpg_pf_numbs',$_POST)) {
+		$kpg_pf_numbs = $_POST['kpg_pf_numbs'];
+	} else {
+		$kpg_pf_numbs='N';
+	}
+	if ($kpg_pf_numbs!='Y' && $kpg_pf_numbs!='N') $kpg_pf_numbs='N';
+	
 	//		kpg_pf_stats: this is a radio box that indicates if the finder should be working or not default = true
 	if (array_key_exists('kpg_pf_stats',$_POST) ){
 		$kpg_pf_stats = $_POST['kpg_pf_stats'];
@@ -90,6 +127,9 @@ if(!empty($_POST['Submit'])&&wp_verify_nonce($_POST['kpg_pf_nonce'],'kpg_pf') ) 
 	$options['index']=$kpg_pf_index;
 	$options['stats']=$kpg_pf_stats;
 	$options['labels']=$kpg_pf_labels;
+	$options['kpg_pf_common']=$kpg_pf_common;
+	$options['kpg_pf_short']=$kpg_pf_short;
+	$options['kpg_pf_numbs']=$kpg_pf_numbs;
 	$options['mu']=$kpg_pf_mu;
 	if ($kpg_pf_stats=='0') { 
 		// clear out any statistics
@@ -136,6 +176,29 @@ if(!empty($_POST['Submit'])&&wp_verify_nonce($_POST['kpg_pf_nonce'],'kpg_pf') ) 
 	<td><input name="kpg_pf_labels" type="checkbox" value="Y" <?php if ($kpg_pf_labels=='Y') {?> checked="checked" <?php } ?>/></td>
 	<td>Blogger.com uses the url &quot;/labels/&quot; folder instead of categories. If you have imported your site from Blogger.com, you can check off this option to automatically redirect links from /labels/string to /category/string. </td>
 </tr>
+
+<tr valign="middle">
+	<td>Don&apos;t use Common words</td>
+	<td><input name="kpg_pf_common" type="checkbox" value="Y" <?php if ($kpg_pf_common=='Y') {?> checked="checked" <?php } ?>/></td>
+	<td>common words such as &quot;the&quot;, &quot;fix&quot;, &quot;why&quot;, &quot;could&quot;, &quot;not&quot;, can screw up the accuracy of the search for the right slug. Try checking this box to get more accuracy. If you get too many 404s uncheck it
+	</td>
+</tr>
+<tr valign="middle">
+	<td>Don&apos;t use short words</td>
+	<td><input name="kpg_pf_short" type="checkbox" value="Y" <?php if ($kpg_pf_short=='Y') {?> checked="checked" <?php } ?>/></td>
+	<td>Words that are one or two letters long can interfere with accuracy. By checking this, the search for a permalink will not
+	use words like &quot;a&quot;, &quot;an&quot;,&quot;to&quot;,&quot;I&quot;,&quot;it&quot;, increasing accuracy.</td>
+</tr>
+<tr valign="middle">
+	<td>Don&apos;t use numbers</td>
+	<td><input name="kpg_pf_numbs" type="checkbox" value="Y" <?php if ($kpg_pf_numbs=='Y') {?> checked="checked" <?php } ?>/></td>
+	<td>Numbers can confuse the search for a permalink. the number 11 will find 911 and 2011, not just 11. Check this if you accuracy is being hurt by numbers.</td>
+</tr>
+
+
+
+
+
 <tr>
 <td>Track 404 and redirects</td>
 <td><select name="kpg_pf_stats">

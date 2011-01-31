@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/
 Description: Never get a 404 page not found again. If you have restructured or moved your blog, this plugin will find the right post or page every time.
-Version: 1.60
+Version: 1.70
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -28,6 +28,9 @@ function kpg_permalink_finder() {
 		$kpg_pf_index='N';
 		$kpg_pf_stats='0';
 		$kpg_pf_labels='N';
+		$kpg_pf_short='N'; // new with 1.7
+		$kpg_pf_numbs='N'; // new with 1.7
+		$kpg_pf_common='N'; // new with 1.7
 		$kpg_pf_mu='Y';
 		$e404=array();
 		$f404=array();
@@ -41,12 +44,18 @@ function kpg_permalink_finder() {
 		if (array_key_exists('index',$options) ) $kpg_pf_index=$options['index'];
 		if (array_key_exists('stats',$options) ) $kpg_pf_stats=$options['stats'];
 		if (array_key_exists('labels',$options) ) $kpg_pf_labels=$options['labels'];
+		if (array_key_exists('kpg_pf_short',$options) ) $kpg_pf_short=$options['kpg_pf_short'];
+		if (array_key_exists('kpg_pf_numbs',$options) ) $kpg_pf_numbs=$options['kpg_pf_numbs'];
+		if (array_key_exists('kpg_pf_common',$options) ) $kpg_pf_common=$options['kpg_pf_common'];
 		// check data and set defaults
 		if ($kpg_pf_find!='9999' && $kpg_pf_find!='1' && $kpg_pf_find!='2' && $kpg_pf_find!='3' && $kpg_pf_find!='4') {
 			$kpg_pf_find='2';
 		}
 		if ($kpg_pf_index!='Y' && $kpg_pf_index!='N') $kpg_pf_index='N';
 		if ($kpg_pf_labels!='Y' && $kpg_pf_labels!='N') $kpg_pf_labels='N';
+		if ($kpg_pf_short!='Y' && $kpg_pf_short!='N') $kpg_pf_short='N';
+		if ($kpg_pf_common!='Y' && $kpg_pf_common!='N') $kpg_pf_common='N';
+		if ($kpg_pf_numbs!='Y' && $kpg_pf_numbs!='N') $kpg_pf_numbs='N';
 		if ($kpg_pf_stats!='10' && $kpg_pf_stats!='20' && $kpg_pf_stats!='30') {
 			$kpg_pf_stats='0';
 		}
@@ -64,10 +73,14 @@ function kpg_permalink_finder() {
 		}
 
 		$plink = basename( $_SERVER['REQUEST_URI'] ); // flink has full url that was missed
+		if (strpos($plink,'/?'))  $plink=substr($plink,0,strpos($plink,'/?'));
+		if (strpos($plink,'?'))  $plink=substr($plink,0,strpos($plink,'?'));
+		$plink=trim($plink);
+		$plink=trim($plink,'/');
 		// check if the incoming line needs a blogger fix
 		if ($kpg_pf_labels=='Y') { 
-			$flink = $_SERVER['REQUEST_URI']; // plink has the page that was 404'd	
-			if (strpos($flink,'/labels/')>0) {
+			$flink = $plink; // flink has the page that was 404'd	
+				if (strpos($flink,'/labels/')>0) {
 				$flink=urldecode($flink);
 				$flink=remove_accents($flink);
 				$flink=str_replace('/labels/','/category/',$flink);
@@ -124,7 +137,7 @@ function kpg_permalink_finder() {
 
 		// now figure if we need to fix a permalink
 		if ($kpg_pf_find<5) {
-			$ID = kpg_find_permalink_post( $plink,$kpg_pf_find );
+			$ID = kpg_find_permalink_post( $plink,$kpg_pf_find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short );
 			if( $ID>0 )  { //check for match	
 				if ($kpg_pf_stats>'0') {
 					$r404[5]=get_permalink( $ID );
@@ -171,8 +184,14 @@ function kpg_permalink_finder() {
 *	does a lookup on the posts table in order to find the post
 *	if not found in posts it tries the pages table.
 *************************************************************/
-function kpg_find_permalink_post( $plink,$kpg_pf_find ) {
+function kpg_find_permalink_post( $plink,$kpg_pf_find,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short  ) {
 	global $wpdb; // useful db functions
+	// common word list - these tend to skew results so don't use them
+	$common="  able about add after again all also am an and any are ask at be been being big but by call came can come could did does don't each end even every for from get give good had has have her here him his how into its just let look low made make many may might more most much must near need new next not now off one other our out over own place put real run same saw say see seem self set she should show side some still such take tell than that the their them then there these they this too try up upon use very want was way well went were what when where which while who why will with would you your ";
+
+
+	// need to strip off the get params that may have been added at the end for some reason
+
 	// fix up the link - NEW - use the wordpress sanitize link 
 	$plink=' '.urldecode($plink); // have no idea why I need this space here.
 	$plink = remove_accents($plink);
@@ -192,7 +211,13 @@ function kpg_find_permalink_post( $plink,$kpg_pf_find ) {
 	// look for each word in the array. If found add in 1; if not add in 0. Order by sum and the best bet bubbles to top.
 	$sql="SELECT ID, ";
 	for ($j=0;$j<count($ss);$j++) {
-		$sql=$sql." if(INSTR(LCASE(post_name),'".mysql_real_escape_string($ss[$j])."'),1,0)+" ;
+	    // elminate shorts, numbers, and common
+		
+		if (!empty($ss[$j])&&((	$kpg_pf_short=='Y'&&strlen($ss[$j])>2)||$kpg_pf_short=='N') 
+				&& (($kpg_pf_common=='Y'&&!strpos($common,$ss[$j]))||$kpg_pf_common=='N') 
+				&& (($kpg_pf_numbs=='Y'&&!is_numeric($ss[$j]))||$kpg_pf_numbs=='N')  ) {
+			$sql=$sql." if(INSTR(LCASE(post_name),'".mysql_real_escape_string($ss[$j])."'),1,0)+" ;
+		}
 	}
 	$sql=$sql."0 as CNT FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY CNT DESC, POST_DATE";
 	$row=$wpdb->get_row($sql);

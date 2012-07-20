@@ -12,6 +12,14 @@
 	$nonce='';	
 	
 	if (array_key_exists('kpg_pf_control',$_POST)) $nonce=$_POST['kpg_pf_control'];
+		if (array_key_exists('kpg_pf_log',$_POST)) {
+			// clear the cache
+			$f=dirname(__FILE__)."/../pf_debug_output.txt";
+			if (file_exists($f)) {
+			    unlink($f);
+				echo "<h2>Deleted Error Log File</h2>";
+			}
+		}
 	if (array_key_exists('action1',$_POST)&&wp_verify_nonce($nonce,'kpg_pf_update')) {
 		// clear the fixed
 		$f404=array();
@@ -142,6 +150,22 @@
 		if ($nobuy!='Y') $nobuy='N';
 		$options['nobuy']=$nobuy;
 		
+		if (array_key_exists('chkloose',$_POST)) {
+			$chkloose=stripslashes($_POST['chkloose']);
+		} else {
+			$chkloose='N';
+		}
+		if ($chkloose!='Y') $chkloose='N';
+		$options['chkloose']=$chkloose;
+		
+		if (array_key_exists('chkfullurl',$_POST)) {
+			$chkfullurl=stripslashes($_POST['chkfullurl']);
+		} else {
+			$chkfullurl='N';
+		}
+		if ($chkfullurl!='Y') $chkfullurl='N';
+		$options['chkfullurl']=$chkfullurl;
+		
 		if (array_key_exists('chkmetaphone',$_POST)) {
 			$chkmetaphone=stripslashes($_POST['chkmetaphone']);
 		} else {
@@ -169,7 +193,7 @@
 
 <div class="wrap">
   <h2>Permalink-Finder Options</h2>
-  <h3>Version 2.0</h3>
+  <h3>Version 2.1</h3>
   <?php
 	if ($nobuy!='Y') {
 ?>
@@ -193,7 +217,7 @@
  
 ?>
   <p style="font-weight:bold;">The Permalink-Finder Plugin is installed and working correctly.</p>
-  <p style="font-weight:bold;">Version 2.0 <a href="#stats" onclick="window.location.href=window.location.href;">Refresh</a></p>
+  <p style="font-weight:bold;"><a href="" onclick="window.location.href=window.location.href;return false;">Refresh</a></p>
   <hr/>
   <h4>For questions and support please check my website <a href="http://www.blogseye.com/i-make-plugins/permalink-finder-plugin/">BlogsEye.com</a>.</h4>
   <form method="post" action="">
@@ -275,6 +299,18 @@
         <td valign="top"><input name="kpg_pf_numbs" type="checkbox" value="Y" <?php if ($kpg_pf_numbs=='Y') {?> checked="checked" <?php } ?>/>
         </td>
         <td valign="top"> Numbers can confuse the search for a permalink. the number 11 will find 911 and 2011, not just 11. Check this if you accuracy is being hurt by numbers and you don't want to search for them. </td>
+      </tr>
+      <tr bgcolor="white">
+        <td width="20%" valign="top"><strong>Check Using Loose Search: </strong> </td>
+        <td valign="top"><input name="chkloose" type="checkbox" value="Y" <?php if ($chkloose=='Y') {?> checked="checked" <?php } ?>/>
+        </td>
+        <td valign="top"> This will check for partial words so it will find politic in politician or member in remember. The plugin will try for exact words first and only does a loose search if it can't find exact matches. </td>
+      </tr>
+      <tr bgcolor="white">
+        <td width="20%" valign="top"><strong>Use all words in the URL: </strong> </td>
+        <td valign="top"><input name="chkfullurl" type="checkbox" value="Y" <?php if ($chkfullurl=='Y') {?> checked="checked" <?php } ?>/>
+        </td>
+        <td valign="top"> Normally the plugin just searches the slug/post-name permalink. Checking this allows the plugin to search the whole url include taxonomy, categories and tags in the url. If there is a date in the URL it will search for this, too. The plugin tries this only after it fails to find a match using the simple slug using exact and loose searches. This obviously is a last resort. Sometimes it gets a good hit, and almost always keeps your user from seeing a 404 page. Even if it is wrong it will be a near miss. </td>
       </tr>
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>Metaphone search (sounds like): </strong> </td>
@@ -360,8 +396,7 @@
       <input class="button-primary" value="Save Changes" type="submit">
     </p>
   </form>
- <a name="stats" nid="#stats" />
-<a href="#stats" onclick="window.location.href=window.location.href;">Refresh</a>
+<a href="" onclick="window.location.href=window.location.href;return false;">Refresh</a>
 <?php
 // now show the stats.
 
@@ -382,6 +417,7 @@
       <td style="background-color:#FFFFEE">Referring Page</td>
       <td style="background-color:#FFFFEE">Browser User Agent</td>
       <td style="background-color:#FFFFEE">Remote IP</td>
+      <td style="background-color:#FFFFEE">Reason</td>
     </tr>
     <?php
 for ($j=0;$j<count($f404)&&$j<$stats;$j++ ) {
@@ -391,7 +427,7 @@ for ($j=0;$j<count($f404)&&$j<$stats;$j++ ) {
     $f1=$f404[$j][1];
     $f5=$f404[$j][5];
     $f2=$f404[$j][2];
-	if (strlen($f1)>32) $f1=substr($f1,0, 32).'...';
+	if (strlen($f1)>32) $f1=substr($f1,0,32).'...';
 	if (strlen($f5)>32) $f5=substr($f5,0,32).'...';
 	if (strlen($f2)>32) $f2=substr($f2,0,32).'...';
 ?>
@@ -402,6 +438,7 @@ for ($j=0;$j<count($f404)&&$j<$stats;$j++ ) {
       <td><a href="<?php echo $f404[$j][2]; ?>" title="<?php echo $f404[$j][2]; ?>" target="_blank"><?php echo $f2; ?></a></td>
       <td><?php echo $f404[$j][3]; ?></td>
       <td><?php echo $f404[$j][4]; ?>
+      <td><?php echo $f404[$j][6]; ?>
         <?php } ?>
   </table>
   <?php } ?>
@@ -421,7 +458,8 @@ for ($j=0;$j<count($f404)&&$j<$stats;$j++ ) {
       <td style="background-color:#FFFFEE">Referring Page</td>
       <td style="background-color:#FFFFEE">Browser User Agent</td>
       <td style="background-color:#FFFFEE">Remote IP
-        <?php
+      <td style="background-color:#FFFFEE">Reason</td>
+       <?php
 for ($j=0;$j<count($e404)&&$j<$stats;$j++ ) {
     $e404[$j][1]=urldecode($e404[$j][1]);
     $e404[$j][2]=urldecode($e404[$j][2]);
@@ -436,10 +474,36 @@ for ($j=0;$j<count($e404)&&$j<$stats;$j++ ) {
       <td><a href="<?php echo $e404[$j][2]; ?>" title="<?php echo $e404[$j][2]; ?>" target="_blank"><?php echo $f2; ?></a></td>
       <td><?php echo $e404[$j][3]; ?></td>
       <td><?php echo $e404[$j][4]; ?>
-        <?php } ?>
+      <td><?php echo $e404[$j][6]; ?>
+       <?php } ?>
   </table>
   <?php
 	}
 	}
 ?>
+
+  <?php
+     $f=dirname(__FILE__)."/../pf_debug_output.txt";
+	 if (file_exists($f)) {
+	    ?>
+<h3>Error Log</h3>
+<p>If debugging is turned on, the plugin will drop a record each time it encounters a PHP error. 
+Most of these errors are not fatal and do not effect the operation of the plugin. Almost all come from the unexpected data that
+spammers include in their effort to fool us. The author's goal is to eliminate any and
+all errors. These errors should be corrected. Fatal errors should be reported to the author at www.blogseye.com.</p>
+
+		
+<form method="post" action="">
+    <input type="hidden" name="kpg_stop_spammers_control" value="<?php echo $nonce;?>" />
+    <input type="hidden" name="kpg_pf_log" value="true" />
+    <input value="Delete Error Log File" type="submit">
+</form>
+
+<pre>
+<?php readfile($f); ?>
+</pre>
+<?php
+	 }
+?>
+
 </div>

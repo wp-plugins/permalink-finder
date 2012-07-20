@@ -1,7 +1,7 @@
 === Permalink Finder Plugin ===
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo,sitemap, robots.txt, crossdomain.xml, apple-touch-icon.png, favicon.ico
 Requires at least: 3.0  
-Stable tag: 2.0    
+Stable tag: 2.1    
 Tested up to: 3.5
 Contributors: Keith Graham       
 Donate link: Donate link: http://www.blogseye.com/buy-the-book/
@@ -68,8 +68,11 @@ The plugin can be tested by adding or deleting words from a working permalink in
 = 1.70 =
 * Due to many suggestions for features: Added code to strip “GET” parameters like UTM tags. Added code to optionally strip numbers, common words, and short words.
 
-= 2.00 =
+= 2.0 =
 * Rewrote entire plugin to be more compatible with new versions of WordPress. Simplified the code and added extra steps to sanitize data and increase security. Added support for default robots.txt, sitemap.xml, crossdomain.xml, favicon.ico, or apple-touch-icon.png files. Added metaphone search. Ignores 404 errors on wp-login and wp-signup from trolls. Sanitizes data so there is less chance of options and logs being reset.
+
+= 2.1 =
+* 07/20/2012 Fixed issue with error logging. System now displays crash logs so that they can be checked. Changed the way certain Server variables are accessed. The REQUEST_URI was not being set on some hosts. Fixed an error with redirects that had only one token on the original URL. Remove /archive/ from links before checking. Added a reason to the reports in order to get a sense of how a permalink is redirected. Added options to control exactly how the plugin searches for a permalink. Ignores (but logs) many types of files that are normally not things that WordPress controls (images, js, css, pdf, etc). Removed the index/default redirect option, as the plugin now does this as side effect of cleaning the slug.
 
 == Support ==
 This plugin is free and I expect nothing in return. Please rate the plugin at: http://wordpress.org/extend/plugins/permalink-finder/

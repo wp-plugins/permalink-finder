@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/
 Description: Never get a 404 page not found again. If you have restructured or moved your blog, this plugin will find the right post or page every time.
-Version: 2.0
+Version: 2.1
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -19,11 +19,6 @@ I did not understand how things work in PHP and Wordpress.
 I have added to it with cut and paste from my other plugins
 and I have moved and changed many parts within.
 
-The results work, but who knows why? It is still filled
-with redundnacies and remnents of my early days of PHP
-coding. The 2.0 version rewrote great parts of it, but
-left in much of the guts. I cringe at some of my code, but 
-it all should work.
 
 ***************************************************************/
 // installation
@@ -101,13 +96,19 @@ function kpg_permalink_finder() {
 function kpg_permalink_fixer() {
 	$options=kpg_pf_get_options();
 	extract($options);
+	// fix request_uri on IIS
+	if (!array_key_exists('REQUEST_URI',$_SERVER)) {
+		$_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'],1 );
+		if (isset($_SERVER['QUERY_STRING'])) { 
+			$_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING']; 
+		}
+	}	
 	$plink = $_SERVER['REQUEST_URI'];
 	
 	if (strpos($plink,'?')!==false)  $plink=substr($plink,0,strpos($plink,'?'));
 	if (strpos($plink,'#')!==false)  $plink=substr($plink,0,strpos($plink,'#'));
 	$flink = $plink; // flink has the page that was 404'd - not the basename
 	if (strpos($plink."\t","/\t")!==false)  $plink=substr($plink,0,strpos($plink."\t","/\t"));
-	
 	
 	//$plink=basename($plink); // plink now is the permalink part of the request.
 	// often I found this is wrong, I want to use the wholw taxonomy in the search
@@ -117,27 +118,33 @@ function kpg_permalink_fixer() {
 	if (strpos(strtolower($plink)."\t","/index.htm\t")!==false) $plink=substr($plink."\t",0,strpos(strtolower($plink)."\t","/index.htm\t"));
 	if (strpos(strtolower($plink)."\t","/index.shtml\t")!==false) $plink=substr($plink."\t",0,strpos(strtolower($plink)."\t","/index.shtml\t"));
 	if (strpos(strtolower($plink)."\t","/default.asp\t")!==false) $plink=substr($plink."\t",0,strpos(strtolower($plink)."\t","/default.asp\t"));
+		// set up stats
+	
 
 	// remove the server
 	$plink=str_ireplace(home_url(),'',$plink);
 	// now get rid of the slashes
+	$reason=$plink;
 	$plink=trim($plink);
 	$plink=trim($plink,'/');
 
 	$plink=str_replace('/','-',$plink); // this way the taxonomy becomes part of the search
+	$plink=str_replace('%20','-',$plink); // spaces are wrong
 	
-	
-	$ref=$_SERVER['HTTP_REFERER'];	
+	$ref='';
+	if (array_key_exists('HTTP_REFERER',$_SERVER)) $ref=$_SERVER['HTTP_REFERER'];	
 	$ref=esc_url_raw($ref);
 	$ref=strip_tags($ref);
 	$ref=remove_accents($ref);
 	$ref=kpg_pf_really_clean($ref);
-	$agent=$_SERVER['HTTP_USER_AGENT'];
+	
+	$agent='';
+	if (array_key_exists('HTTP_USER_AGENT',$_SERVER)) $agent=$_SERVER["HTTP_USER_AGENT"];
 	$agent=strip_tags($agent);
 	$agent=remove_accents($agent);
 	$agent=kpg_pf_really_clean($agent);
 	$agent=htmlentities($agent);
-	$request=$_SERVER['REQUEST_URI'];
+	$request=$flink;
 	$request=esc_url_raw($request);
 	$request=strip_tags($request);
 	$request=remove_accents($request);
@@ -151,19 +158,18 @@ function kpg_permalink_fixer() {
 	$r404[2]=$ref;
 	$r404[3]=$agent;
 	$r404[4]=$_SERVER['REMOTE_ADDR'];
+	$r404[6]='';
+	// testing an ignore for the category
+	if (strpos($plink,"/category/")!==false) {
+		$r404[6]='/category/ is not redirected.';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
+		return;
+	}
 
 	// do not mess with robots trying to find wp-login.php and wp-signup.php
 	if (strpos($plink."\t","/wp-login.php\t")!==false||strpos($plink."\t","/wp-signup.php\t")!==false||strpos($plink."\t","/feed\t")!==false){
-		array_unshift($e404,$r404);
-		for ($j=0;$j<10;$j++) {
-			$n=count($e404);
-			if ($n>$stats) {
-				unset($e404[$n-1]);
-			}
-		}
-		//echo "\r\n\r\n<!-- step 6 -->\r\n\r\n";
-		$options['e404']=$e404;
-		update_option('kpg_permalinfinder_options', $options);
+		$r404[6]='$plink is probably a robot looking for exploits.';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 		return;
 	}
 
@@ -171,6 +177,8 @@ function kpg_permalink_fixer() {
 	if ($chkrobots=='Y'&&strpos(strtolower($plink)."\t","robots.txt\t")!==false) {
 		// looking for a robots.txt
 		// header out the .txt file
+		$r404[6]='display tobots.txt';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 		header('HTTP/1.1 200 OK');
 		header('Content-Type: text/plain');
 		echo $robots;
@@ -180,6 +188,8 @@ function kpg_permalink_fixer() {
 	if ($chkcrossdomain=='Y'&&strpos(strtolower($plink)."\t","crossdomain.xml\t")!==false) {
 		// looking for a robots.txt
 		// header out the .txt file
+		$r404[6]='display crossdomain.xml';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 		header('HTTP/1.1 200 OK');
 		header('Content-Type: application/xml');  
 		echo '<'.'?xml version="1.0"?'.">\r\n"; // because of ? and stuff need to echo this separate
@@ -200,6 +210,8 @@ function kpg_permalink_fixer() {
 			if (function_exists('header_remove'))header_remove();
 			ini_set('zlib.output_compression','Off');
 			header('HTTP/1.1 200 OK');
+			$r404[6]='display favicon.ico';
+			kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 			header('Content-Type: image/x-icon');           
 			header('Content-Disposition: attachment; filename="favicon.ico"');
 			readfile($f);
@@ -223,6 +235,8 @@ function kpg_permalink_fixer() {
 		if (file_exists($f)) {
 			if (function_exists('header_remove'))header_remove();
 			ini_set('zlib.output_compression','Off');
+			$r404[6]='display apple-touch-icon.png';
+			kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 			header('HTTP/1.1 200 OK');
 			header('Content-Type: image/png');           
 			readfile($f);
@@ -232,6 +246,8 @@ function kpg_permalink_fixer() {
 
 	if ($chksitemap=='Y'&&strpos(strtolower($plink)."\t","sitemap.xml\t")!==false) {
 		// if there is no sitemap, return the last 20 entries made
+		$r404[6]='display sitemap.xml';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 		header('HTTP/1.1 200 OK');
 		header('Content-Type: application/xml');  
 		$sitemap=kpg_pf_sitemap();
@@ -239,6 +255,8 @@ function kpg_permalink_fixer() {
 	}
 	if ($chkdublin=='Y'&&strpos(strtolower($plink)."\t","dublin.rdf\t")!==false) {
 		// dublin.rdf is a little used method for robots to get more info about your site
+		$r404[6]='display dublin.rdf';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 		header('HTTP/1.1 200 OK');
 		header('Content-Type: application/xml');  
 		echo '<'.'?xml version="1.0"?'.'>'; // because of ? and stuff need to echo this separate
@@ -259,6 +277,8 @@ function kpg_permalink_fixer() {
 	}
 	if ($chkopensearch=='Y'&&(strpos(strtolower($plink)."\t","opensearch.xml\t")!==false||strpos(strtolower($plink)."\t","search.xml\t")!==false)) {
 		// search.xml may hel people search your site.
+		$r404[6]='display opensearch.xml';
+		kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 		header('HTTP/1.1 200 OK');
 		header('Content-Type: application/xml');  
 		echo '<'.'?xml version="1.0"?'.">\r\n"; // because of ? and stuff need to echo this separate
@@ -293,16 +313,8 @@ function kpg_permalink_fixer() {
 	);
     foreach ($ignoreTypes as $it) {
 		if(strpos(strtolower($plink)."\t",'.'.$it."\t")!==false) {
-			array_unshift($e404,$r404);
-			for ($j=0;$j<10;$j++) {
-				$n=count($e404);
-				if ($n>$stats) {
-					unset($e404[$n-1]);
-				}
-			}
-			//echo "\r\n\r\n<!-- step 6 -->\r\n\r\n";
-			$options['e404']=$e404;
-			update_option('kpg_permalinfinder_options', $options);
+			$r404[6]="request for non WP file:.$it";
+			kpg_find_permalink_error_log($options,$e404,$r404,$stats);
 			return;
 		}
 	}
@@ -316,40 +328,37 @@ function kpg_permalink_fixer() {
 	$plink=kpg_pf_really_clean($plink);
 	$plink=str_replace('_','-',$plink);
 	$plink=str_replace(' ','-',$plink); 
+	$plink=str_replace('%20','-',$plink); 
+	$plink=str_replace('%22','-',$plink); 
+	$plink=str_replace('/archive/','-',$plink); 
 	$plink=sanitize_title_with_dashes($plink); // gets rid of some words that wordpress things are unimportant
 	// check if the incoming line needs a blogger fix
 	if (empty($plink)) {
 		// redirect back to siteurl
 		$flink=home_url();
 		$r404[5]=$flink;
-		$options['f404']=$f404;
-		update_option('kpg_permalinfinder_options', $options);
+		
+		$r404[6]="empty search, send to home";
+		kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
 		wp_redirect($flink,(int)$kpg_pf_301); // let wp do it - more compatable.
 		exit();
 	}
 
 	if ($labels=='Y') { 
-			if (strpos($flink,'/labels/')>0) {
-				$flink=str_replace('/labels/','/category/',$flink);
-				$flink=str_replace('.html','',$flink); // get dir of html and shtml at the end - don't need to search for these
-				$flink=str_replace('.shtml','',$flink); 
-				$flink=str_replace('.htm','',$flink); 
-				$flink=str_replace('_','-',$flink); // underscores should be dashes
-				$flink=str_replace('.','-',$flink); // periods should be dashes 
-				$flink=str_replace(' ','-',$flink); // spaces are wrong
-				$flink=str_replace('%20','-',$flink); // spaces are wrong
-			if ($stats>0) {
-				$r404[5]=$flink;
-				array_unshift($f404,$r404);
-				for ($j=0;$j<10;$j++) {
-					$n=count($f404);
-					if ($n>$stats) {
-						array_pop($f404);
-					}
-				}
-				$options['f404']=$f404;
-				update_option('kpg_permalinfinder_options', $options);
-			}
+		if (strpos($flink,'/labels/')>0) {
+			$flink=str_replace('/labels/','/category/',$flink);
+			$flink=str_replace('.html','',$flink); // get dir of html and shtml at the end - don't need to search for these
+			$flink=str_replace('.shtml','',$flink); 
+			$flink=str_replace('.htm','',$flink); 
+			$flink=str_replace('_','-',$flink); // underscores should be dashes
+			$flink=str_replace('.','-',$flink); // periods should be dashes 
+			$flink=str_replace(' ','-',$flink); // spaces are wrong
+			$flink=str_replace('%20','-',$flink); // spaces are wrong
+			$flink=str_replace('%22','-',$flink); // spaces are wrong
+			$flink=str_replace('"','-',$flink); // spaces are wrong
+			$r404[5]=$flink;
+			$r404[6]="Redirect /label/ to /category/";
+			kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
 			wp_redirect($flink,(int)$kpg_pf_301); // let wp do it - more compatable.
 			exit();
 		}
@@ -364,31 +373,96 @@ function kpg_permalink_fixer() {
 		$plink=str_replace('.shtml','',$plink); 
 		$plink=str_replace('.htm','',$plink); 
 		$plink=str_replace('.php','',$plink); 
-		$ID = kpg_find_permalink_post( $plink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short,false );
+		// first check for the original slug - use the wordpress slug fixer on it.
+		if (strpos(strtolower($flink)."\t","/index.html\t")!==false) $flink=substr($flink."\t",0,strpos(strtolower($flink)."\t","/index.html\t"));
+		if (strpos(strtolower($flink)."\t","/index.htm\t")!==false) $flink=substr($flink."\t",0,strpos(strtolower($flink)."\t","/index.htm\t"));
+		if (strpos(strtolower($flink)."\t","/index.shtml\t")!==false) $flink=substr($flink."\t",0,strpos(strtolower($flink)."\t","/index.shtml\t"));
+		if (strpos(strtolower($flink)."\t","/default.asp\t")!==false) $flink=substr($flink."\t",0,strpos(strtolower($flink)."\t","/default.asp\t"));
+		$flink=basename($flink);
+		$flink=str_replace('.html','',$flink); // get dir of html and shtml at the end - don't need to search for these
+		$flink=str_replace('.shtml','',$flink); 
+		$flink=str_replace('.htm','',$flink); 
+		$flink=str_replace('_','-',$flink); // underscores should be dashes
+		$flink=str_replace('.','-',$flink); // periods should be dashes 
+		$flink=str_replace(' ','-',$flink); // spaces are wrong
+		$flink=str_replace('%20','-',$flink); // spaces are wrong
+		$flink=str_replace('http://','',$flink);
+		$flink=str_replace('https://','',$flink);
+		$flink=sanitize_url($flink);
+		$flink=str_replace('http://','',$flink);
+		$flink=str_replace('https://','',$flink);
+		$flink=str_replace('%22','-',$flink); // spaces are wrong
+		$flink=str_replace('"','-',$flink); // spaces are wrong
+
+		// check for matches to slugs
+		
+		$reason="Found exact slug $flink";
+		$ID=kpg_find_permalink_post_direct($flink);
+		// check - exact matches on flink
+		if ($ID==false) {
+			$ansa=kpg_find_permalink_post_exact($flink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short);
+			$ID=$ansa[0];
+			$cnt=$ansa[1];
+			$reason="Found $cnt exact word matches to slug $flink";
+		}
+		if ($ID==false&&$chkloose=='Y') {
+			$ansa=kpg_find_permalink_post_loose($flink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short);
+			$ID=$ansa[0];
+			$cnt=$ansa[1];
+			$reason="Found $cnt loose word matches to $flink";
+		}
+		if ($ID==false&&$chkfullurl=='Y') {
+			$ansa=kpg_find_permalink_post_exact($plink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short);
+			$ID=$ansa[0];
+			$cnt=$ansa[1];
+			$reason="Found $cnt exact word matches to $plink";
+		}
+		if ($ID==false&&$chkloose=='Y'&&$chkfullurl=='Y') {
+			$ansa=kpg_find_permalink_post_loose($plink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short);
+			$ID=$ansa[0];
+			$cnt=$ansa[1];
+			$reason="Found $cnt loose word matches to $plink";
+		}
+
 		if( $ID==false && $chkmetaphone=='Y')  { 
-			// missed on regular words - try a metaphone search??
-			$ID = kpg_find_permalink_post( $plink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short,true );
+			// missed on regular words - try a metaphone search?? Only do it on original slug
+			$ansa=kpg_find_permalink_post_metaphone( $flink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short);
+			$ID=$ansa[0];
+			$cnt=$ansa[1];
+			if ($ID!==false) 
+				$reason="Found $cnt metaphone 'sounds-like' word matches to $flink";
+			else
+				$reason="failed all searches";
+		}
+		if( $ID==false && $chkmetaphone=='Y' && $chkfullurl=='Y')  { 
+			// missed on regular words - try a metaphone search?? Only do it on original slug
+			$ansa=kpg_find_permalink_post_metaphone( $plink,$find ,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short);
+			$ID=$ansa[0];
+			$cnt=$ansa[1];
+			if ($ID!==false) 
+				$reason="Found $cnt metaphone 'sounds-like' word matches to $plink";
+			else
+				$reason="failed all searches";
 		}
 		if( $ID!==false)  { 
-			if ($stats>0) {
-				$r404[5]=get_permalink( $ID );
-				array_unshift($f404,$r404);
-				for ($j=0;$j<10;$j++) {
-					$n=count($f404);
-					if ($n>$stats) {
-						array_pop($f404);
-					}
-				}
-				$options['f404']=$f404;
-				update_option('kpg_permalinfinder_options', $options);
-			} 
+			$r404[5]=get_permalink( $ID );
+			$r404[6]=$reason;
+			kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
 			wp_redirect(get_permalink( $ID ),(int)$kpg_pf_301); // let wp do it - more compatable.
 			exit();
 		}
 	}
 	// still here, it must be a real 404, we should log it
-	if ($stats>0) {
-		//echo "\r\n\r\n<!-- step 5 -->\r\n\r\n";
+	$reason="Not found - slug:$flink, loose url:$plink";
+	//echo "\r\n\r\n<!-- step 5 -->\r\n\r\n";
+	$r404[6]=$reason;
+	kpg_find_permalink_error_log($options,$e404,$r404,$stats);
+
+	return; // end of permalink fixer
+}
+// generic logging routines - I do it too many times
+function kpg_find_permalink_error_log($options,$e404,$r404,$stats) {
+		if ($stats<=0) return;
 		array_unshift($e404,$r404);
 		for ($j=0;$j<10;$j++) {
 			$n=count($e404);
@@ -399,23 +473,34 @@ function kpg_permalink_fixer() {
 		//echo "\r\n\r\n<!-- step 6 -->\r\n\r\n";
 		$options['e404']=$e404;
 		update_option('kpg_permalinfinder_options', $options);
-	}
-
-	return; // end of permalink fixer
+		return;
 }
-
-//kpg_find_permalink_post
-function kpg_find_permalink_post( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short,$metaphone=false  ) {
+function kpg_find_permalink_fixed_log($options,$f404,$r404,$stats) {
+		if ($stats<=0) return;
+		array_unshift($f404,$r404);
+		for ($j=0;$j<10;$j++) {
+			$n=count($f404);
+			if ($n>$stats) {
+				unset($f404[$n-1]);
+			}
+		}
+		//echo "\r\n\r\n<!-- step 6 -->\r\n\r\n";
+		$options['f404']=$f404;
+		update_option('kpg_permalinfinder_options', $options);
+		return;
+}
+// do a quick check to see if the sanitized slug can be found
+function kpg_find_permalink_post_direct($flink) {
+	global $wpdb; // useful db functions
+	$post = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_status = 'publish'", $flink ));
+	if ( $post ) return $post;
+	return false;
+}
+// check exact match to the post 
+function kpg_find_permalink_post_exact( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short) {
 	global $wpdb; // useful db functions
 	// common word list - these tend to skew results so don't use them
 	$common="  am an and at be but by did does had has her him his its may she than that the them then there these they ";
-	
-	// first check to see if it is a good slug already - without the fuzzy search
-	$post = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_status = 'publish'", $plink ));
-	//echo "\r\n\r\n<!-- step 3a '$plink' -->\r\n\r\n";
-
-	if ( $post ) return $post;
-
 	$ss1=explode("-",$plink); // place into an arrary
 	$ss=array();
 	// look for each word in the array. If found add in 1; if not add in 0. Order by sum and the best bet bubbles to top.
@@ -434,48 +519,10 @@ function kpg_find_permalink_post( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$k
 			}
 		}
 	}
-	if (empty($ss)) return false;
-	if ($metaphone) {
-		// we need to do the search but do a metaphone  search on each word
-		$ss1=$ss;
-		$ss=array();
-		foreach($ss1 as $se) {
-			if (strlen(metaphone($se))>1) {
-				$ss[]=metaphone($se);
-			}
-		}
-		if (empty($ss)) return false;
-		if ($find>count($ss)) $find=$count($ss);
-		if (empty($ss)) return false;
-		$sql="SELECT ID,post_name as PN FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY post_modified DESC";
-		$rows=$wpdb->get_results($sql,ARRAY_A);
-		$ansa=array();
-		foreach ($rows as $row) {
-			extract($row);
-			$PN=str_replace(' ','-',$PN); // just for the hell of it
-			$PN=str_replace('_','-',$PN);
-			$st=explode('-',$PN);
-			$CNT=0;
-			foreach ($st as $sst) {
-				$se=metaphone($sst);
-				if (strlen($se)>1) {
-					if (in_array($se,$ss)) $CNT++;
-				}
-			}
-			if ($CNT>=$find) $ansa[$ID]=$CNT;
-		}
-		if (empty($ansa)) return false;
-		// sort array by CNT keeping keys
-		arsort($ansa);
-		foreach ($ansa as $ID=>$CNT) {
-			return $ID;
-		}
-	
-		return false;
-	}
-	// first time look for the -key- combo with dashes. This is more exact than any old hit in the string
+	$findcnt=$find;
+	if ($find>count($ss)) $findcnt=count($ss);
+	if (empty($ss)) return array(false,0);
 	$sql="SELECT ID, ";
-	if ($find>count($ss)) $find=$count($ss);
 
 	for ($j=0;$j<count($ss);$j++) {
 		// CONCAT(name, ' - ', description)
@@ -486,9 +533,40 @@ function kpg_find_permalink_post( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$k
 	if ($row) {	
 	   $ID=$row->ID; 
 	   $CNT=$row->CNT;
-		//echo "\r\n\r\n<!-- step 3c '$CNT' '$find' -->\r\n\r\n";
-	   if ($CNT>=$find) return $ID;
+		//echo "\r\n\r\n<!-- step 3c '$CNT' '$findcnt' -->\r\n\r\n";
+	   if ($CNT>=$findcnt) return array($ID,$CNT);
 	} 
+	return array(false,0);
+}
+// use the loose search
+function kpg_find_permalink_post_loose( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short) {
+	global $wpdb; // useful db functions
+	// common word list - these tend to skew results so don't use them
+	$common="  am an and at be but by did does had has her him his its may she than that the them then there these they ";
+	global $wpdb; // useful db functions
+	// common word list - these tend to skew results so don't use them
+	$common="  am an and at be but by did does had has her him his its may she than that the them then there these they ";
+	$ss1=explode("-",$plink); // place into an arrary
+	$ss=array();
+	// look for each word in the array. If found add in 1; if not add in 0. Order by sum and the best bet bubbles to top.
+	// remove the numbers and small words from $ss1
+	foreach($ss1 as $se) {
+		if (!empty($se)) {
+			if($kpg_pf_numbs=='Y' && is_numeric($se)) {
+				// ignore this guy - he's numeric
+			} else if ($kpg_pf_common=='Y'&& strpos(' '.$common.' ',$se)!==false) {
+				// ignore because of a common word
+			} else if ($kpg_pf_short=='Y' && strlen($se)<3) {
+				// ignore the word it is too short
+			} else {
+				// use this word
+				$ss[count($ss)]=$se;
+			}
+		}
+	}
+	$findcnt=$find;
+	if ($find>count($ss)) $findcnt=count($ss);
+	if (empty($ss)) return array(false,0);
 	// try it the old way without explicit searching for the dashes, hits anywhere on any part of a word.
 	$sql="SELECT ID, ";
 	for ($j=0;$j<count($ss);$j++) {
@@ -500,9 +578,79 @@ function kpg_find_permalink_post( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$k
 	if ($row) {	
 	   $ID=$row->ID; 
 	   $CNT=$row->CNT;
-	   if ($CNT>=$find) return $ID;
+	   if ($CNT>=$findcnt) return array($ID,$CNT);
 	} 
-	return false;
+	return array(false,0);
+}
+//kpg_find_permalink_post using metaphone
+function kpg_find_permalink_post_metaphone( $plink,$find,$kpg_pf_numbs ,$kpg_pf_common ,$kpg_pf_short ) {
+	global $wpdb; // useful db functions
+	// common word list - these tend to skew results so don't use them
+	$common="  am an and at be but by did does had has her him his its may she than that the them then there these they ";
+	global $wpdb; // useful db functions
+	// common word list - these tend to skew results so don't use them
+	$common="  am an and at be but by did does had has her him his its may she than that the them then there these they ";
+	$ss1=explode("-",$plink); // place into an arrary
+	$ss=array();
+	// look for each word in the array. If found add in 1; if not add in 0. Order by sum and the best bet bubbles to top.
+	// remove the numbers and small words from $ss1
+	foreach($ss1 as $se) {
+		if (!empty($se)) {
+			if($kpg_pf_numbs=='Y' && is_numeric($se)) {
+				// ignore this guy - he's numeric
+			} else if ($kpg_pf_common=='Y'&& strpos(' '.$common.' ',$se)!==false) {
+				// ignore because of a common word
+			} else if ($kpg_pf_short=='Y' && strlen($se)<3) {
+				// ignore the word it is too short
+			} else {
+				// use this word
+				$ss[count($ss)]=$se;
+			}
+		}
+	}
+	$findcnt=$find;
+	if ($find>count($ss)) $findcnt=count($ss);
+	if (empty($ss)) return array(false,0);
+	// we need to do the search but do a metaphone  search on each word
+	$ss1=$ss;
+	$ss=array();
+	foreach($ss1 as $se) {
+		if (strlen(metaphone($se))>1) {
+			$ss[]=metaphone($se);
+		}
+	}
+	$findcnt=$find;
+	
+	if ($find > count($ss)) $findcnt=count($ss);
+	if (empty($ss)) return array(false,0);
+	$sql="SELECT ID,post_name as PN FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY post_modified DESC";
+	$rows=$wpdb->get_results($sql,ARRAY_A);
+	$ansa=array();
+	foreach ($rows as $row) {
+		extract($row);
+		$PN=str_replace(' ','-',$PN); // just for the hell of it
+		$PN=str_replace('_','-',$PN);
+		$st=explode('-',$PN);
+		$CNT=0;
+		if (!empty($st) && count($st)>=$findcnt) {
+			foreach ($st as $sst) {
+				$se=metaphone($sst);
+				if (strlen($se)>1) {
+					if (in_array($se,$ss)) $CNT++;
+				}
+			}
+			if ($CNT>=$findcnt) $ansa[$ID]=$CNT;
+		}
+	}
+	if (empty($ansa)) return array(false,0);
+	// sort array by CNT keeping keys
+	arsort($ansa);
+	foreach ($ansa as $ID=>$CNT) {
+		if ($CNT>=$findcnt)
+			return array($ID,$CNT); // we were getting zero counts somehow
+	}
+
+	return array(false,0);
 }
 
 function kpg_pf_sitemap() {
@@ -579,7 +727,7 @@ function kpg_pf_ErrorHandler($errno, $errmsg, $filename, $linenum, $vars) {
 	// we are only conserned with the errors and warnings, not the notices
 	//if ($errno==E_NOTICE || $errno==E_WARNING) return false;
 	$serrno="";
-	if ((strpos($filename,'stop-spammer-registrations')<1)&&(strpos($filename,'options-general.php')<1)) return false;
+	if ((strpos($filename,'permalink-finder')<1)&&(strpos($filename,'options-general.php')<1)) return false;
 	switch ($errno) {
 		case E_ERROR: 
 			$serrno="Fatal run-time errors. These indicate errors that can not be recovered from, such as a memory allocation problem. Execution of the script is halted. ";
@@ -633,6 +781,8 @@ function kpg_pf_get_options() {
 		'stats'=>30,
 		'labels'=>'N',
 		'nobuy'=>'N',
+		'chkloose'=>'Y',
+		'chkfullurl'=>'Y',
 		'chkrobots'=>'Y',
 		'chkicon'=>'Y',
 		'chksitemap'=>'Y',
@@ -673,6 +823,8 @@ Disallow: /*?
 	if ($ansa['kpg_pf_common']!='Y') $ansa['kpg_pf_common']='N';
 	if ($ansa['chkrobots']!='Y') $ansa['chkrobots']='N';
 	if ($ansa['chkicon']!='Y') $ansa['chkicon']='N';
+	if ($ansa['chkloose']!='Y') $ansa['chkloose']='N';
+	if ($ansa['chkfullurl']!='Y') $ansa['chkfullurl']='N';
 	if ($ansa['chkdublin']!='Y') $ansa['chkdublin']='N';
 	if ($ansa['chkopensearch']!='Y') $ansa['chkopensearch']='N';
 	if ($ansa['chkmetaphone']!='Y') $ansa['chkmetaphone']='N';

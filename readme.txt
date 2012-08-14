@@ -3,8 +3,10 @@ Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo,sitemap, robo
 Requires at least: 3.0  
 Stable tag: 2.1    
 Tested up to: 3.5
-Contributors: Keith Graham       
-Donate link: Donate link: http://www.blogseye.com/buy-the-book/
+Contributors: Keith Graham 
+Donate link: http://www.blogseye.com/buy-the-book/
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Never get a 404 page not found again. If you have restructured or moved your blog, this plugin will find the right post or page every time.
 

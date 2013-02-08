@@ -1,10 +1,10 @@
 === Permalink Finder Plugin ===
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo,sitemap, robots.txt, crossdomain.xml, apple-touch-icon.png, favicon.ico
 Requires at least: 3.0  
-Stable tag: 2.1    
+Stable tag: 2.2    
 Tested up to: 3.5
-Contributors: Keith Graham 
-Donate link: http://www.blogseye.com/buy-the-book/
+Contributors: Keith Graham       
+Donate link: http://www.blogseye.com/donate/
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,16 +76,20 @@ The plugin can be tested by adding or deleting words from a working permalink in
 = 2.1 =
 * 07/20/2012 Fixed issue with error logging. System now displays crash logs so that they can be checked. Changed the way certain Server variables are accessed. The REQUEST_URI was not being set on some hosts. Fixed an error with redirects that had only one token on the original URL. Remove /archive/ from links before checking. Added a reason to the reports in order to get a sense of how a permalink is redirected. Added options to control exactly how the plugin searches for a permalink. Ignores (but logs) many types of files that are normally not things that WordPress controls (images, js, css, pdf, etc). Removed the index/default redirect option, as the plugin now does this as side effect of cleaning the slug.
 
+= 2.2 =
+* 10/2/2012 Fixed many small but annoying bugs.
+* search for exacts matches on categories
+* changed the way MU functions work so that MU options can only be set on the Network Admin Dashboard.
+* Under MU users cannot see the Permalink options unless the admin sets the MU switch in the permalink finder options.
+* Keeps a grand total of the permalinks fixed since the plugin was installed (or version 2.2).
+* converts underscores to hyphens.
+* added option to load the actual page and change the "404 not found" to a "200 found". This would be useful in SEO when a redirect would not help. It essentially keeps the old permalink structure intact and makes no effort to inform requestors of the change. Creates the ability to type any keyword as a permalink and get a related page without a redirect.
+* thanks to siddkb1986 who posted at the Wordpress plugin support page on Wordpress.org about query strings being lost. I incorporated the changes suggested.
+* Delayed loading of 404 processing in order to conserve memory resources. Only loads the redirection functions after a 404 has been detected.
+
+
 == Support ==
 This plugin is free and I expect nothing in return. Please rate the plugin at: http://wordpress.org/extend/plugins/permalink-finder/
-If you wish to support my programming, buy my book: 
+If you wish to support my programming, You can donate or by my book: 
+<a href="http://www.blogseye.com/donate/">donate>/a>
 <a href="http://www.blogseye.com/buy-the-book/">Error Message Eyes: A Programmer's Guide to the Digital Soul</a>
-Other plugins:
-<a href=" http://wordpress.org/extend/plugins/stop-spammer-registrations-plugin/">Stop Spammers Plugin</a>
-<a href="http://wordpress.org/extend/plugins/open-in-new-window-plugin/">Open in New Window Plugin</a>
-<a href="http://wordpress.org/extend/plugins/kindle-this/">Kindle This - publish blog to user's Kindle</a>
-<a href="http://wordpress.org/extend/plugins/stop-spammer-registrations-plugin/">Stop Spammer Registrations Plugin</a>
-<a href="http://wordpress.org/extend/plugins/no-right-click-images-plugin/">No Right Click Images Plugin</a>
-<a href="http://wordpress.org/extend/plugins/collapse-page-and-category-plugin/">Collapse Page and Category Plugin</a>
-<a href="http://wordpress.org/extend/plugins/custom-post-type-list-widget/">Custom Post Type List Widget</a>
-

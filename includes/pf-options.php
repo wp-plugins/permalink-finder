@@ -3,25 +3,36 @@
 	Permalink Finder Plugin 
 	Options Setup Page
 */
+if (!defined('ABSPATH')) exit; // just in case
+
 	if(!current_user_can('manage_options')) {
 		die('Access Denied');
 	}
 	$options=kpg_pf_get_options();
 	extract($options);
+    // delete options and reset as not being autoloaded, I am retrofitting this into the plugin
+	if ($autoload=='N') {
+		$options['autoload']='Y';
+		$autoload='Y';
+		delete_option('kpg_permalinfinder_options');
+		add_option('kpg_permalinfinder_options',$options,'','no'); // now it loads only at 404
+	}
 
 	$nonce='';	
 	
 	if (array_key_exists('kpg_pf_control',$_POST)) $nonce=$_POST['kpg_pf_control'];
 		if (array_key_exists('kpg_pf_log',$_POST)) {
 			// clear the cache
-			$f=dirname(__FILE__)."/../pf_debug_output.txt";
+			$f=dirname(__FILE__)."/../.pf_debug_output.txt";
 			if (file_exists($f)) {
-			    unlink($f);
+			    @unlink($f);
 				echo "<h2>Deleted Error Log File</h2>";
 			}
 		}
 	if (array_key_exists('action1',$_POST)&&wp_verify_nonce($nonce,'kpg_pf_update')) {
 		// clear the fixed
+		$cntredir=0;
+		$options['cntredir']=$cntredir;
 		$f404=array();
 		$options['f404']=$f404;
 		update_option('kpg_permalinfinder_options',$options);
@@ -29,10 +40,47 @@
 	} 
 	if (array_key_exists('action2',$_POST)&&wp_verify_nonce($nonce,'kpg_pf_update')) {
 		// clear the errors
+		$cnt404=0;
+		$options['cnt404']=$cnt404;
 		$e404=array();
 		$options['e404']=$e404;
 		update_option('kpg_permalinfinder_options',$options);
 		echo "<h2>404 Errors Cleared</h2>";
+	} 
+	if (array_key_exists('action3',$_POST)&&wp_verify_nonce($nonce,'kpg_pf_update')) {
+		// update overrides
+		$redir301='';
+		$redirtexact='';
+		$redirsearch='';
+		$redirfind='';		
+
+		if (array_key_exists('redir301',$_POST)) $redir301=$_POST['redir301'];
+		if (array_key_exists('redirtexact',$_POST)) $redirtexact=$_POST['redirtexact'];
+		if (array_key_exists('redirsearch',$_POST)) $redirsearch=$_POST['redirsearch'];
+		if (array_key_exists('redirfind',$_POST)) $redirfind=$_POST['redirfind'];
+        $redirs[count($redirs)]=array($redir301,$redirtexact,$redirsearch,$redirfind);
+		$options['redirs']=$redirs;
+		update_option('kpg_permalinfinder_options',$options);
+		echo "<h2>Added Override</h2>";
+	} 
+	if (array_key_exists('action4',$_POST)&&wp_verify_nonce($nonce,'kpg_pf_update')) {
+		// delete redirs
+		$redirlink=array();
+		if (array_key_exists('redirlink',$_POST)) $redirlink=$_POST['redirlink'];
+		if (empty($redirlink)) $redirlink=array();
+		$newredirs=array();
+		$x=0;
+		for ($j=0;$j<count($redirs);$j++) {
+			if (!in_array($j,$redirlink)) {
+				$newredirs[count($newredirs)]=$redirs[$j];
+			} else {
+				$x++;
+			}
+		}
+		$options['redirs']=$newredirs;
+		update_option('kpg_permalinfinder_options',$options);
+		$redirs=$newredirs;
+		echo "<h2>Deleted $x Override</h2>";
 	} 
 	if (array_key_exists('action',$_POST)&&wp_verify_nonce($nonce,'kpg_pf_update')) { 
 		if (array_key_exists('find',$_POST)) {
@@ -49,6 +97,13 @@
 			$labels='N';
 		}
 		$options['labels']=$labels;
+		
+		if (array_key_exists('chkcat',$_POST)) {
+			$chkcat=stripslashes($_POST['chkcat']);
+		} else {
+			$chkcat='N';
+		}
+		$options['chkcat']=$chkcat;
 		
 		
 		if (array_key_exists('stats',$_POST)) {
@@ -68,7 +123,7 @@
 		if (array_key_exists('kpg_pf_numbs',$_POST)) {
 			$kpg_pf_numbs=stripslashes($_POST['kpg_pf_numbs']);
 		} else {
-			$kpg_pf_numbs='Y';
+			$kpg_pf_numbs='N';
 		}
 		$options['kpg_pf_numbs']=$kpg_pf_numbs;
 		
@@ -99,6 +154,8 @@
 			$chkdublin='N';
 		}
 		$options['chkdublin']=$chkdublin;
+		
+		
 		
 		if (array_key_exists('chkopensearch',$_POST)) {
 			$chkopensearch=stripslashes($_POST['chkopensearch']);
@@ -174,11 +231,30 @@
 		if ($chkmetaphone!='Y') $chkmetaphone='N';
 		$options['chkmetaphone']=$chkmetaphone;
 		
+		if (array_key_exists('fixhtml',$_POST)) {
+			$fixhtml=stripslashes($_POST['fixhtml']);
+		} else {
+			$fixhtml='N';
+		}
+		if ($fixhtml!='Y') $fixhtml='N';
+		$options['fixhtml']=$fixhtml;
+		
+		if (array_key_exists('do200',$_POST)) {
+			$do200=stripslashes($_POST['do200']);
+		} else {
+			$do200='N';
+		}
+		if ($do200!='Y') $do200='N';
+		$options['do200']=$do200;
+		
 		
 		if (function_exists('is_multisite') && is_multisite() 
 				&& function_exists('kpg_pf_global_unsetup') && function_exists('kpg_pf_global_setup')) {
 			if ($kpg_pf_mu=='N') {
 				kpg_pf_global_unsetup();
+				switch_to_blog(1);
+				update_option('kpg_permalinfinder_options',$options);
+				restore_current_blog();
 			} else {
 				kpg_pf_global_setup();
 			}
@@ -190,25 +266,16 @@
 		extract($options);
 	}
 ?>
-
 <div class="wrap">
   <h2>Permalink-Finder Options</h2>
-  <h3>Version 2.1</h3>
+  <h3>Version 2.2</h3>
+  <h4><?php echo $totredir; ?> Permalinks redirected</h4>
   <?php
 	if ($nobuy!='Y') {
 ?>
   <div style="width:60%;background-color:ivory;border:#333333 medium groove;padding:4px;margin-left:4px;margin-left:auto;margin-right:auto;">
-    <p>This plugin is free and I expect nothing in return. If you would like to support my programming, you can buy my book of short stories.</p>
-    <p>Some plugin authors ask for a donation. I ask you to spend a very small amount for something that you will enjoy. eBook versions for the Kindle and other book readers start at 99&cent;. The book is much better than you might think, and it has some very good science fiction writers saying some very nice things. <br/>
-      <a target="_blank" href="http://www.blogseye.com/buy-the-book/">Error Message Eyes: A Programmer's Guide to the Digital Soul</a></p>
-    <p>A link on your blog to one of my personal sites would also be appreciated.</p>
-    <p><a target="_blank" href="http://www.WestNyackHoney.com">West Nyack Honey</a> (I keep bees and sell the honey)<br />
-      <a target="_blank" href="http://www.cthreepo.com/blog">Wandering Blog</a> (My personal Blog) <br />
-      <a target="_blank" href="http://www.cthreepo.com">Resources for Science Fiction</a> (Writing Science Fiction) <br />
-      <a target="_blank" href="http://www.jt30.com">The JT30 Page</a> (Amplified Blues Harmonica) <br />
-      <a target="_blank" href="http://www.harpamps.com">Harp Amps</a> (Vacuum Tube Amplifiers for Blues) <br />
-      <a target="_blank" href="http://www.blogseye.com">Blog&apos;s Eye</a> (PHP coding) <br />
-      <a target="_blank" href="http://www.cthreepo.com/bees">Bee Progress Beekeeping Blog</a> (My adventures as a new beekeeper) </p>
+    <p>This plugin is free and I expect nothing in return. You can support me by donating a dollar or so.
+      <a target="_blank" href="http://www.blogseye.com/donate" target="_blank">Donate!</a></p>
   </div>
   <?php
 	}
@@ -225,8 +292,9 @@
     <input type="hidden" name="kpg_pf_control" value="<?php echo $nonce;?>" />
     <?php
 		if (function_exists('is_multisite') && is_multisite()) {
+			global $blog_id;
+			if (!empty($blog_id)&&$blog_id<=1) {
 	?>
-
     <h3>Network Blog Option:</h3>
     <table align="center" cellspacing="2" style="background-color:#CCCCCC;font-size:.9em;">
       <tr bgcolor="white">
@@ -240,12 +308,13 @@
         <td valign="top"> If you are running WPMU and want to control all options and logs through the main log admin panel, select on. If you select OFF, each blog will have to configure the plugin separately. </td>
       </tr>
     </table>
- 
     <br/>
     <?php
+			} else {
+				//echo "<br/>Blog id is '$blog_id' <br/>";
+			}
 		}
 	?>
-
     <h3>Permalink Finder Options:</h3>
     <p>You can control how the Permalink Finder finds the correct match when a 404 occurs.</p>
     <table align="center" cellspacing="2" style="background-color:#CCCCCC;font-size:.9em;">
@@ -274,6 +343,14 @@
         <td valign="top"> Status code returned with the redirect URL.<br/>
           Usually this is 301. This will tell search engines to update their indexes. Use 302 or 307 if you don't want the new page in the search engines just now, but still want to send this user to a new page. Use 303 to indicate that the page is redirecting to another script to finish processing, but keep using the original url.</td>
       </tr>
+	  
+      <tr bgcolor="white">
+        <td width="20%" valign="top"><strong>Search Categories:&nbsp;</strong></td>
+        <td valign="top"><input name="chkcat" type="checkbox" value="Y" <?php if ($chkcat=='Y') {?> checked="checked" <?php } ?>/>
+        </td>
+        <td valign="top">Checks for exact match on category. If someone leaves of the /category/ or mangles the url, this checks the slug against the category list. This is done before the slug is checked for a published page or post. If you have a page with the same slug as a category this might cause an issue.</td>
+      </tr>
+	  
      <tr bgcolor="white">
         <td width="20%" valign="top"><strong>Fix Blogger Labels:&nbsp;</strong></td>
         <td valign="top"><input name="labels" type="checkbox" value="Y" <?php if ($labels=='Y') {?> checked="checked" <?php } ?>/>
@@ -284,8 +361,7 @@
         <td width="20%" valign="top"><strong>Don&apos;t use Common words:&nbsp;</strong></td>
         <td valign="top"><input name="kpg_pf_common" type="checkbox" value="Y" <?php if ($kpg_pf_common=='Y') {?> checked="checked" <?php } ?>/>
         </td>
-        <td valign="top"> common words such as &quot;the&quot;, &quot;fix&quot;, &quot;why&quot;, &quot;could&quot;, &quot;not&quot;, can screw up the accuracy of the search for the right slug. Try checking this box to get more accuracy. If you get too many 404s uncheck it 
-	</td>
+        <td valign="top"> common words such as &quot;the&quot;, &quot;fix&quot;, &quot;why&quot;, &quot;could&quot;, &quot;not&quot;, can screw up the accuracy of the search for the right slug. Try checking this box to get more accuracy. If you get too many 404s uncheck it </td>
       </tr>
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>Don&apos;t use short words:&nbsp;</strong></td>
@@ -328,10 +404,26 @@
           </select></td>
         <td valign="top"> As long as we are looking at 404&apos;s and trying to redirect them we might as well keep track of the last few hits and what happened to them. You can keep up to 30 of the last hits in memory. (If you set this to zero you will lose any statistics that have been recorded.)</td>
       </tr>
-    </table>
- 
-    <br/>
+      </tr>
+<!--
+	<tr bgcolor="white">
+        <td width="20%" valign="top"><strong>Fix HTML, SHTML and HTML on requests </strong> </td>
+        <td valign="top"><input name="fixhtml" type="checkbox" id="fixhtml" value="Y" <?php if ($fixhtml=='Y') {?> checked="checked" <?php } ?>/>
+        </td>
+        <td valign="top"> This works a little differently than the other options. This does not do a redirect. It checks the url and looks for an ending of .html, .shtml or .htm. It then trims these off and lets WordPress continue. It does this before there is a 404 so this often prevents a &quot;page not found&quot; error. If you switched your blog over from blogger and your pages ended in .html, then this will silently repair this without generating a redirect. </td>
+      </tr>
+-->
 
+<tr bgcolor="white">
+        <td width="20%" valign="top"><strong>Do not redirect</strong> </td>
+        <td valign="top"><input name="do200" type="checkbox" id="do200" value="Y" <?php if ($do200=='Y') {?> checked="checked" <?php } ?>/>
+        </td>
+        <td valign="top"> Rather than redirect, the plugin will found pages immediately and issue a status code of 200. This does not redirect to the found page, but loads the page immediately. Bad for search engines who dislike redundant pages, but possibly good for some sites in that you can link to any set of keywords and wind up at a good page.</td>
+      </tr>
+
+
+    </table>
+    <br/>
     <h3>Special File Handling:</h3>
     <p>If any of these files result in a 404 file not found, you can return a default version instead.</p>
     <table align="center" cellspacing="2" style="background-color:#CCCCCC;font-size:.9em;">
@@ -346,70 +438,151 @@
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>favicon.ico or apple-touch-icon.png missing: </strong> </td>
         <td valign="top"><input name="chkicon" type="checkbox" value="Y" <?php if ($chkicon=='Y') {?> checked="checked" <?php } ?>/></td>
-        <td valign="top"> When your site does not have a favicon.ico or apple-touch-icon.png file return the default wordpress icon. (Only works if wordpress is set to handle the 404 for the these files.) 
-	</td>
+        <td valign="top"> When your site does not have a favicon.ico or apple-touch-icon.png file return the default wordpress icon. (Only works if wordpress is set to handle the 404 for the these files.) </td>
       </tr>
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>sitemap.xml missing: </strong> </td>
         <td valign="top"><input name="chksitemap" type="checkbox" value="Y" <?php if ($chksitemap=='Y') {?> checked="checked" <?php } ?>/></td>
-        <td valign="top"> When a robot looks for your site map and can't find it, this will return your last 20 pages modified, ensuring that the search engines will find your most recent posts and pages. Spiders will spider your whole site eventually, but this will cue them that you have new or changed stuff. 
-	</td>
+        <td valign="top"> When a robot looks for your site map and can't find it, this will return your last 20 pages modified, ensuring that the search engines will find your most recent posts and pages. Spiders will spider your whole site eventually, but this will cue them that you have new or changed stuff. </td>
       </tr>
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>crossdomain.xml missing: </strong> </td>
         <td valign="top"><input name="chkcrossdomain" type="checkbox" value="Y" <?php if ($chkcrossdomain=='Y') {?> checked="checked" <?php } ?>/></td>
-        <td valign="top">When the adobe crossdomain.xml file is not found, the plugin provides a restrictive version that will protect your site from cross domain flash running and corrupting your site. Malicious spiders look for this file to see if you are vulnerable to exploits.
-        </td>
+        <td valign="top">When the adobe crossdomain.xml file is not found, the plugin provides a restrictive version that will protect your site from cross domain flash running and corrupting your site. Malicious spiders look for this file to see if you are vulnerable to exploits. </td>
       </tr>
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>Dublin.rdf missing: </strong> </td>
         <td valign="top"><input name="chkdublin" type="checkbox" value="Y" <?php if ($chkdublin=='Y') {?> checked="checked" <?php } ?>/></td>
-        <td valign="top"> Dublin.rdf is a way some search engines can discover a description of your site. When missing use a default one. This does not set the required meta information in the blog head, but is only here if search engines robots look for it. 
-	</td>
+        <td valign="top"> Dublin.rdf is a way some search engines can discover a description of your site. When missing use a default one. This does not set the required meta information in the blog head, but is only here if search engines robots look for it. </td>
       </tr>
       <tr bgcolor="white">
         <td width="20%" valign="top"><strong>OpenSearch.txt missing: </strong> </td>
         <td valign="top"><input name="chkopensearch" type="checkbox" value="Y" <?php if ($chkopensearch=='Y') {?> checked="checked" <?php } ?>/></td>
-        <td valign="top"> OpenSearch is a method for displaying a search box for your site. When missing use a default one. This does not set the required meta information in the blog head, but is only here if a program looks for it. 
-	</td>
+        <td valign="top"> OpenSearch is a method for displaying a search box for your site. When missing use a default one. This does not set the required meta information in the blog head, but is only here if a program looks for it. </td>
       </tr>
     </table>
     <br/>
- 
-    <br/>
-
-    <h3>Remove &quot;Buy The Book&quot;:</h3>
+    <h3>Remove &quot;Donate&quot; nag message:</h3>
     <input type="checkbox" name ="nobuy" value="Y" <?php if ($nobuy=='Y') echo 'checked="true"'; ?> >
     <?php 
 		if ($nobuy=='Y')  {
 			echo "Thanks";		
 		} else {
 		?>
-    Check if you are tired of seeing the <a target="_blank" href="http://www.blogseye.com/buy-the-book/">Buy Keith's Book</a> box at the top of the page.
+    Check if you are tired of seeing the <a target="_blank" href="http://www.blogseye.com/donate/">donate</a> box at the top of the page.
     <?php 
 		}
 	?>
- 
-    <br/>
     <br/>
     <p class="submit">
       <input class="button-primary" value="Save Changes" type="submit">
     </p>
   </form>
-<a href="" onclick="window.location.href=window.location.href;return false;">Refresh</a>
-<?php
+  <?php
+	$overidetesting=false;
+	if ($overidetesting) {
+  ?>
+  <br/>
+  <h3>Redirection Overrides:</h3>
+  <p>You can manually specify a redirection link. If permalink finder is consistently sending a link to the wrong page you can manuall specify the link that you want redirected. The link does not have to exist.<br/>
+    You can specify the type redirect code, 301, 307, etc. <br/>
+    You can specify whether the match has to be exact or not. If you choose inexact, you can have any link that has the partial link to anew location. For instance, you might redirect /tv/startrek to http://yoursite.com/tv/star-trek.<br/>
+    You must enter the target link. This does not have to be on your site. You can sepcify that anyone who tries to access a page will be redirected to an affiliate link or wikipedia, for instance.<br/>
+    You can delete a link if it is not workin.<br/>
+    Be careful how you enter the target link. If it is not found, the permalink finder might start looping, continually searching for a link that does not exist. Test yur links! </p>
+  <fieldset style="border thin black solid;" >
+  <legend>Add Override:</legend>
+  <form method="POST" action="">
+    <input type="hidden" name="action3" value="override" />
+    <input type="hidden" name="kpg_pf_control" value="<?php echo $nonce;?>" />
+    <table>
+      <tr>
+        <td>Redirect code:</td>
+        <td><select name="redir301">
+            <option value="301" selected="selected">301 moved permanently</option>
+            <option value="302">302 found (originally temporary redirect)</option>
+            <option value="303">303 see other</option>
+            <option value="307">307 temporary redirect</option>
+          </select>
+      </tr>
+      <tr>
+        <td>Exact or loose match:</td>
+        <td><select name="redirtexact">
+            <option value="Y"  selected="selected">Exact Match</option>
+            <option value="N">Loose Match</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Match this link:</td>
+        <td><input	name="redirsearch"	type="text" size="72" />
+        </td>
+      </tr>
+      <tr>
+        <td>Redirect to this link:</td>
+        <td><input	name="redirfind"	type="text" size="72" />
+        </td>
+      </tr>
+    </table>
+    </tr>
+    </table>
+    <input class="button-primary" value="Add Link Override" type="submit">
+  </form>
+  </fieldset>
+  <?php
+		if (!empty($redirs)) {
+	?>
+  <fieldset style="border thin black solid;" >
+  <legend>Overrides:</legend>
+  <form method="POST" action="">
+    <input type="hidden" name="action4" value="override_maint" />
+    <input type="hidden" name="kpg_pf_control" value="<?php echo $nonce;?>" />
+    <table align="center" cellspacing="2" style="background-color:#CCCCCC;font-size:.9em;">
+      <tr bgcolor="white">
+        <td style="background-color:#FFFFEE">Redirect code</td>
+        <td style="background-color:#FFFFEE">Match Type</td>
+        <td style="background-color:#FFFFEE">Look-for link</td>
+        <td style="background-color:#FFFFEE">Send-to link</td>
+        <td style="background-color:#FFFFEE">Delete</td>
+      </tr>
+      <?php
+		
+		for ($j=0;$j<count($redirs);$j++) {
+			$row=$redirs[$j];
+			echo "\r\n<tr bgcolor=\"white\">";
+				echo "<td>".$row[0]."</td>";
+				echo "<td>".$row[1]."</td>";
+				echo "<td>".$row[2]."</td>";
+				echo "<td>".$row[3]."</td>";
+				echo "\r\n\r\n<td><input type=\"checkbox\" value=\"$j\" name=\"redirlink[$j]\" ></td>\r\n";
+			echo "<tr>\r\n";
+		}
+	?>
+    </table>
+    <input class="button-primary" value="Update Overrides" type="submit">
+  </form>
+  </fieldset>
+  <?php
+		}
+	}
+	?>
+  <br/>
+  <br/>
+  <a href="" onclick="window.location.href=window.location.href;return false;">Refresh</a>
+  <?php
 // now show the stats.
 
 	if ($stats>0) {
 		if (count($f404)>0) {
 ?>
   <h3 align="center">Fixed Permalinks</h3>
+  <h4 align="center"><?php echo $cntredir; ?> Permalinks redirected since cleared</h4>
   <form method="POST" action="">
     <input class="button-primary" value="Clear Fixed Permalinks" type="submit">
     <input type="hidden" name="action1" value="clear_fixed" />
     <input type="hidden" name="kpg_pf_control" value="<?php echo $nonce;?>" />
   </form>
-  <table align="center" cellspacing="2" style="background-color:#CCCCCC;font-size:.9em;">
+  <table  align="center" cellspacing="1" style="background-color:#CCCCCC;font-size:.9em;">
     <tr bgcolor="white">
       <td style="background-color:#FFFFEE">Date/Time</td>
       <td style="background-color:#FFFFEE">Requested Page</td>
@@ -446,6 +619,7 @@ for ($j=0;$j<count($f404)&&$j<$stats;$j++ ) {
 	if (count($e404)>0) {
 ?>
   <h3 align="center">404 errors</h3>
+  <h4 align="center">Detected <?php echo $cnt404; ?> unfixed 404s</h4>
   <form method="POST" action="">
     <input class="button-primary" value="Clear 404 Errors" type="submit">
     <input type="hidden" name="action2" value="clear_404" />
@@ -459,7 +633,7 @@ for ($j=0;$j<count($f404)&&$j<$stats;$j++ ) {
       <td style="background-color:#FFFFEE">Browser User Agent</td>
       <td style="background-color:#FFFFEE">Remote IP
       <td style="background-color:#FFFFEE">Reason</td>
-       <?php
+      <?php
 for ($j=0;$j<count($e404)&&$j<$stats;$j++ ) {
     $e404[$j][1]=urldecode($e404[$j][1]);
     $e404[$j][2]=urldecode($e404[$j][2]);
@@ -475,35 +649,30 @@ for ($j=0;$j<count($e404)&&$j<$stats;$j++ ) {
       <td><?php echo $e404[$j][3]; ?></td>
       <td><?php echo $e404[$j][4]; ?>
       <td><?php echo $e404[$j][6]; ?>
-       <?php } ?>
+        <?php } ?>
   </table>
   <?php
 	}
 	}
 ?>
-
   <?php
-     $f=dirname(__FILE__)."/../pf_debug_output.txt";
+     $f=dirname(__FILE__)."/../.pf_debug_output.txt";
 	 if (file_exists($f)) {
 	    ?>
-<h3>Error Log</h3>
-<p>If debugging is turned on, the plugin will drop a record each time it encounters a PHP error. 
-Most of these errors are not fatal and do not effect the operation of the plugin. Almost all come from the unexpected data that
-spammers include in their effort to fool us. The author's goal is to eliminate any and
-all errors. These errors should be corrected. Fatal errors should be reported to the author at www.blogseye.com.</p>
-
-		
-<form method="post" action="">
+  <h3>Error Log</h3>
+  <p>If debugging is turned on, the plugin will drop a record each time it encounters a PHP error. 
+    Most of these errors are not fatal and do not effect the operation of the plugin. Almost all come from the unexpected data that
+    spammers include in their effort to fool us. The author's goal is to eliminate any and
+    all errors. These errors should be corrected. Fatal errors should be reported to the author at www.blogseye.com.</p>
+  <form method="post" action="">
     <input type="hidden" name="kpg_stop_spammers_control" value="<?php echo $nonce;?>" />
     <input type="hidden" name="kpg_pf_log" value="true" />
     <input value="Delete Error Log File" type="submit">
-</form>
-
-<pre>
+  </form>
+  <pre>
 <?php readfile($f); ?>
 </pre>
 <?php
 	 }
 ?>
-
 </div>

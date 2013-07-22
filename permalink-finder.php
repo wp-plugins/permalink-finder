@@ -3,7 +3,7 @@
 Plugin Name: Permalink Finder
 Plugin URI: http://www.BlogsEye.com/
 Description: Never get a 404 page not found again. If you have restructured or moved your blog, this plugin will find the right post or page every time.
-Version: 2.2
+Version: 2.3
 Author: Keith P. Graham
 Author URI: http://www.BlogsEye.com/
 
@@ -22,21 +22,89 @@ and I have moved and changed many parts within.
 
 ***************************************************************/
 if (!defined('ABSPATH')) exit; // just in case
-// installation
-// add the hooks:
+// set up the main action firs
+// this hooks template redirect where it detects the 404 error and does a redirect
 add_action( 'template_redirect', 'kpg_permalink_finder' ); 
+// kpg_permalink_finder is the main action. 
+// it checks to see if the includes file exists and then includes it.
 
-// the admin menu needed here
+function kpg_permalink_finder() {
+	// if we made it here, remove the redundant actions
+	if (!is_404()) return;
+	remove_action('template_redirect', 'kpg_permalink_finder');
+	kpg_pf_errorsonoff();
+	if (!function_exists('kpg_permalink_fixer')) load_404_process();
+	kpg_permalink_fixer(); // in the include file. Only loaded on a 404
+	kpg_pf_errorsonoff('off');
+	return; // if we are redirecting we will be back. if not return for legit 404
+}
 
-//add_action('admin_menu', 'kpg_permalink_finder_admin_menu');
-
+// there are two versions of the admin menus. One is for regular and one is for networks
 add_action('admin_menu', 'kpg_pf_admin_menus');
-add_action('network_admin_menu', 'kpg_pf_net_admin_menus');
+if (function_exists('is_multisite') && is_multisite()) {
+	add_action('network_admin_menu', 'kpg_pf_net_admin_menus');
+}
+// set up the admin menu stuff. only happens when the user is an admin
+function kpg_pf_admin_menus() {
+	if(!current_user_can('manage_options')) return;
+	if (function_exists('is_multisite') && is_multisite()) {
+		// this is an MU blog and needs further checking.	
+		$options=kpg_pf_get_options();
+		$kpg_pf_mu=$options['kpg_pf_mu'];
+		// now install the admin stuff
+		// if the kpg_pf_mu is "Y" then we are in a network environment and do not install
+		if ($kpg_pf_mu=='Y') {
+			// we are in the normal admin menu
+			return; // a network - only the admin can do it.
+		}
+	} 
+	// this means we can install the options page on the network options page.
+	add_options_page('Permalink Finder', 'Permalink Finder', 'manage_options', 'permalink_finder','kpg_permalink_finder_control');
+	add_action('rightnow_end', 'kpg_pf_rightnow');
+}
+// install the network admin stuff
+function kpg_pf_net_admin_menus() {
+	if(!current_user_can('manage_network_options')) return;
+	add_submenu_page('settings.php','Permalink Finder', 'Permalink Finder', 'manage_network_options', 'adminpermalink_finder','kpg_permalink_finder_control');
+	//add_options_page('Stop Spammers', 'Stop Spammers', 'manage_options','adminstopspammersoptions','kpg_pf_control');
+	//add_options_page('Stop Spammers History', 'Spammer History', 'manage_options','adminstopspammerstats','kpg_pf_stats_control');
+	add_action('mu_rightnow_end','kpg_pf_rightnow');
+}
+
+// these load the settings pages
+function kpg_permalink_finder_control()  {
+// this is the display of information about the page.
+	kpg_pf_errorsonoff();
+	require_once("includes/pf-options.php");
+	kpg_pf_errorsonoff('off');
+}
+function kpg_pf_rightnow() {
+	$options=kpg_pf_get_options();
+	extract($options);
+	$kpg_pf_mu=$options['kpg_pf_mu'];
+ 	$me=admin_url('options-general.php?page=permalink_finder');
+    if (function_exists('is_multisite') && is_multisite() && $kpg_pf_mu=='Y') {
+		switch_to_blog(1);
+		$me=get_admin_url( 1,'network/settings.php?page=adminpermalink_finder');
+		restore_current_blog();
+	}
+	if ($totredir>0) {
+		// steal the akismet stats css format 
+		// get the path to the plugin
+		echo "<p><a style=\"font-style:italic;\" href=\"$me\">Permalink Finder</a> has redirected $totredir pages.";
+		if ($nobuy=='N' && $totredir>10000) echo "  <a style=\"font-style:italic;\" href=\"http://www.blogseye.com/buy-the-book/\">Buy Keith Graham&apos;s Science Fiction Book</a>";
+		echo"</p>";
+	} else {
+		echo "<p><a style=\"font-style:italic\" href=\"$me\">Permalink Finder</a> has not redirected any 404 errors, yet.";
+		echo"</p>";
+	}
+}
 
 function load_pf_mu() {
 // check to see if this is an MU installation
 // called from the get option screen so it does not load unless there is a 404 or this is needed.
-	if (function_exists('is_multisite') && is_multisite()) {
+	if (!function_exists('is_multisite') || !is_multisite()) return;
+    if (function_exists('kpg_pf_global_setup')) return; // been there done that
 		// install the global hooks to globalize the options
 		$kpg_pf_mu='N';
 		global $blog_id;
@@ -52,62 +120,12 @@ function load_pf_mu() {
 			load_pf_mu_options_file();
 			kpg_pf_global_setup();
 		}
-	}
 }
 function load_pf_mu_options_file() {
-	//sfs_pf_errorsonoff();
+	kpg_pf_errorsonoff();
 	require_once('includes/pf-mu-options.php');
-	//sfs_pf_errorsonoff('off');
+	kpg_pf_errorsonoff('off');
 }
-
-
-
-function kpg_pf_net_admin_menus() {
-	if(!current_user_can('manage_network_options')) return;
-	$options=kpg_pf_get_options();
-    $kpg_pf_mu=$options['kpg_pf_mu'];
-	// now install the admin stuff
-	// if the kpg_pf_mu is "Y" then we are in a network environment
-	// it is a network, the kpg_pf_mu is on and we can manage the network
-	// this means we can install the options page on the network options page.
-	
-	add_submenu_page('settings.php','Permalink Finder', 'Permalink Finder', 'manage_options', 'adminpermalink_finder','kpg_permalink_finder_control');
-	
-	//add_options_page('Stop Spammers', 'Stop Spammers', 'manage_options','adminstopspammersoptions','kpg_pf_control');
-	//add_options_page('Stop Spammers History', 'Spammer History', 'manage_options','adminstopspammerstats','kpg_pf_stats_control');
-	add_action('mu_rightnow_end','kpg_pf_rightnow');
-}
-function kpg_pf_admin_menus() {
-	$options=kpg_pf_get_options();
-    $kpg_pf_mu=$options['kpg_pf_mu'];
-	if(!current_user_can('manage_options')) return;
-	// now install the admin stuff
-	// if the kpg_pf_mu is "Y" then we are in a network environment and do not install
-	if ($kpg_pf_mu=='Y') {
-		// we are in the normal admin menu
-		// I am not sure that the kpg_pf_mu can be turned on
-		//echo "<!-- \r\n\r\n the kpg_pf_mu is on! \r\n\r\n -->";
-		return; // a network - only the admin can do it.
-	}
-	// this means we can install the options page on the network options page.
-	add_options_page('Permalink Finder', 'Permalink Finder', 'manage_options', 'permalink_finder','kpg_permalink_finder_control');
-	add_action('rightnow_end', 'kpg_pf_rightnow');
-}
-
-function kpg_permalink_finder_admin_menu() {
-	add_options_page('Permalink Finder', 'Permalink Finder', 'manage_options', 'permalink_finder','kpg_permalink_finder_control');
-}
-
-// how early can we determine the 404 error?
-// we may know 404 anywhere before template redirect
-/* parse_request*
-	send_headers*
-	parse_query*
-	pre_get_posts*
-	posts_selection
-	wp*
-	template_redirect
-*/
 
 // uninstall routine
 function kpg_permalink_finder_uninstall() {
@@ -121,16 +139,6 @@ if ( function_exists('register_uninstall_hook') ) {
 	register_uninstall_hook(__FILE__, 'kpg_permalink_finder_uninstall');
 }
 // actions to handle 404
-function kpg_permalink_finder() {
-	// if we made it here, remove the redundant actions
-	if (!is_404()) return;
-	remove_action('template_redirect', 'kpg_permalink_finder');
-	kpg_pf_errorsonoff();
-	load_404_process();
-	kpg_permalink_fixer(); 
-	kpg_pf_errorsonoff('off');
-	return; // if we are redirecting we will be back. if not return for legit 404
-}
 
 
 // generic logging routines - I do it too many times
@@ -164,34 +172,6 @@ function kpg_find_permalink_fixed_log($options,$f404,$r404,$stats) {
 }
 
 
-// admin page
-function kpg_permalink_finder_control()  {
-// this is the display of information about the page.
-	kpg_pf_errorsonoff();
-	require_once("includes/pf-options.php");
-	kpg_pf_errorsonoff('off');
-}
-function kpg_pf_rightnow() {
-	$options=kpg_pf_get_options();
-	extract($options);
-	$kpg_pf_mu=$options['kpg_pf_mu'];
- 	$me=admin_url('options-general.php?page=permalink_finder');
-    if (function_exists('is_multisite') && is_multisite() && $kpg_pf_mu=='Y') {
-		switch_to_blog(1);
-		$me=get_admin_url( 1,'network/settings.php?page=adminpermalink_finder');
-		restore_current_blog();
-	}
-	if ($totredir>0) {
-		// steal the akismet stats css format 
-		// get the path to the plugin
-		echo "<p><a style=\"font-style:italic;\" href=\"$me\">Permalink Finder</a> has redirected $totredir pages.";
-		if ($nobuy=='N' && $totredir>10000) echo "  <a style=\"font-style:italic;\" href=\"http://www.blogseye.com/buy-the-book/\">Buy Keith Graham&apos;s Science Fiction Book</a>";
-		echo"</p>";
-	} else {
-		echo "<p><a style=\"font-style:italic\" href=\"$me\">Permalink Finder</a> has not redirected any 404 errors, yet.";
-		echo"</p>";
-	}
-}
 
 
 // here are the debug functions
@@ -244,8 +224,8 @@ function kpg_pf_ErrorHandler($errno, $errmsg, $filename, $linenum, $vars) {
 
 
 function kpg_pf_get_options() {
-	// before we begin we need to check if we need to redirect the options to blog 1
-	load_pf_mu();
+	// whenever we do a get_option we need to check if this is a multisite setup	
+	load_pf_mu(); // does nothing unless this is the first time and we are in multisite.
 
 	$opts=get_option('kpg_permalinfinder_options');
 	if (empty($opts)||!is_array($opts)) $opts=array();

@@ -14,17 +14,23 @@ function kpg_permalink_fixer() {
 			$_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING']; 
 		}
 	}	
-	$plink = $_SERVER['REQUEST_URI'];
+	
+	$plink= $_SERVER['REQUEST_URI'];
+	$pulink=$plink;
 	// keeping the query - there is a chance that there is a query variable that needs to be preserved.
 	// possibly a search or an update has been bookmarked.
+	if (strpos($plink,'/feed/')!==false) return;
 	$query='';
 	if (strpos($plink,'?')!==false) {
 		$query=substr($plink,strpos($plink,'?'));
 		$plink=substr($plink,0,strpos($plink,'?'));
 	}
+	// do not redirect search queries
+	if (strpos('?'.$query,'?s=')!==false) return;
+	if (strpos($query,'&s=')!==false) return;
 	if (strpos($plink,'#')!==false)  $plink=substr($plink,0,strpos($plink,'#'));
 	$plink=trim($plink,'/');
-	$flink = $plink; // flink has the page that was 404'd - not the basename
+	$flink= $plink; // flink has the page that was 404'd - not the basename
 	
 	//$plink=basename($plink); // plink now is the permalink part of the request.
 	// often I found this is wrong, I want to use the wholw taxonomy in the search
@@ -37,6 +43,7 @@ function kpg_permalink_fixer() {
 	$plink=str_replace('.shtml','',$plink);
 	$plink=str_replace('.htm','',$plink);
 	$plink=str_replace('.asp','',$plink);
+	$plink=str_replace('.aspx','',$plink);
 	// set up stats	
 
 	// now get rid of the slashes
@@ -71,7 +78,7 @@ function kpg_permalink_fixer() {
 	// set up stats
 	$r404=array();
 	$r404[0]=date('m/d/Y H:i:s',time() + ( get_option( 'gmt_offset' ) * 3600 ));
-	$r404[1]=$request;
+	$r404[1]=$pulink;
 	$r404[2]=$ref;
 	$r404[3]=$agent;
 	$r404[4]=$_SERVER['REMOTE_ADDR'];
@@ -288,9 +295,22 @@ function kpg_permalink_fixer() {
 	$plink=str_replace('/archive/','-',$plink); 
 	$plink=sanitize_title_with_dashes($plink); // gets rid of some words that wordpress things are unimportant
 	// check if the incoming line needs a blogger fix
+	// for looking for recursive redirects
+	$old_link=$_SERVER['REQUEST_URI'];
 	if (empty($plink)) {
 		// redirect back to siteurl
 		$flink=home_url();
+		// recursion check
+		if ($flink==$old_link||$flink==$old_link.$query) {
+			$r404[5]=$flink;
+			$cntredir++;
+			$options['cntredir']=$cntredir;
+			$totredir++;
+			$options['totredir']=$totredir;
+			$r404[6]="Recursive redirect on home url, returning to wordpress ";
+			kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
+			return;
+		}
 		$r404[5]=$flink;
 		$cntredir++;
 		$options['cntredir']=$cntredir;
@@ -304,6 +324,17 @@ function kpg_permalink_fixer() {
 
 	if ($labels=='Y') { 
 		if (strpos($flink,'/labels/')>0) {
+			if ($flink==$old_link||$flink==$old_link.$query) {
+				$r404[5]=$flink;
+				$cntredir++;
+				$options['cntredir']=$cntredir;
+				$totredir++;
+				$options['totredir']=$totredir;
+				$r404[6]="Recursive redirect on label url, returning to wordpress ";
+				kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
+				return;
+			}
+
 			$flink=str_replace('/labels/','/category/',$flink);
 			$flink=str_replace('.html','',$flink); // get dir of html and shtml at the end - don't need to search for these
 			$flink=str_replace('.shtml','',$flink); 
@@ -444,12 +475,17 @@ function kpg_permalink_fixer() {
 				$reason="failed all searches";
 			if (empty($ID)) $ID=false;
 		}
-// got the page
 		
 		if( $ID!==false)  { 
+// got the page
+			if (!empty($cat)) {
+				$link=get_category_link($ID);
+			} else {
+				$link=get_permalink( $ID );
+			}
 		    if ($do200=='Y') {
 				// here we display the page
-				$r404[5]=$flink;
+				$r404[5]=$link;
 				$r404[6]=$reason." -page loaded direct '$ID'";
 				$cntredir++;
 				$options['cntredir']=$cntredir;
@@ -458,7 +494,7 @@ function kpg_permalink_fixer() {
 				kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
 				header("HTTP/1.1 200 Ok");
 				if (kpg_pf_load_page($ID)) exit();
-				$r404[5]=$flink;
+				$r404[5]=$link;
 				$r404[6]=$reason." page not found '$ID'";
 				$cntredir++;
 				$options['cntredir']=$cntredir;
@@ -467,13 +503,18 @@ function kpg_permalink_fixer() {
 				kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
 				
 			}
-			if (!empty($cat)) {
-				$link=get_category_link($ID);
-			} else {
-				$link=get_permalink( $ID );
-			}
 			if (!empty($link)) {
-				$r404[5]=$link;
+				if ($link==$old_link||$link==$old_link.$query) {
+					$r404[5]=$flink;
+					$cntredir++;
+					$options['cntredir']=$cntredir;
+					$totredir++;
+					$options['totredir']=$totredir;
+					$r404[6]="Recursive redirect on url, returning to wordpress ";
+					kpg_find_permalink_fixed_log($options,$f404,$r404,$stats);
+					return;
+				}
+				$r404[5]=$_SERVER['REQUEST_URI'].'/'.$link;
 				$r404[6]=$reason;
 				$cntredir++;
 				$options['cntredir']=$cntredir;
@@ -579,7 +620,9 @@ function kpg_find_permalink_post_exact( $plink,$find,$kpg_pf_numbs ,$kpg_pf_comm
 		// CONCAT(name, ' - ', description)
 		$sql=$sql." if(INSTR(CONCAT('-',LCASE(post_name),'-'),'-".mysql_real_escape_string($ss[$j])."-'),1,0)+" ;
 	}
-	$sql=$sql."0 as CNT FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY CNT DESC, post_modified DESC LIMIT 1";
+	$sql=$sql."0 as CNT FROM ".$wpdb->posts." WHERE post_status = 'publish'
+		and POST_TYPE <> 'attachment' and POST_TYPE <> 'nav_menu_item' 
+	ORDER BY CNT DESC, post_modified DESC LIMIT 1";
 	$row=$wpdb->get_row($sql);
 	if ($row) {	
 	   $ID=$row->ID; 
@@ -624,7 +667,9 @@ function kpg_find_permalink_post_loose( $plink,$find,$kpg_pf_numbs ,$kpg_pf_comm
 	for ($j=0;$j<count($ss);$j++) {
 		$sql=$sql." if(INSTR(LCASE(post_name),'".mysql_real_escape_string($ss[$j])."'),1,0)+" ;
 	}
-	$sql=$sql."0 as CNT FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY CNT DESC, post_modified DESC LIMIT 1";
+	$sql=$sql."0 as CNT FROM ".$wpdb->posts." WHERE post_status = 'publish' 
+		and POST_TYPE <> 'attachment' and POST_TYPE <> 'nav_menu_item' 
+		ORDER BY CNT DESC, post_modified DESC LIMIT 1";
 	//echo "\r\n\r\n<!-- step 3b  - $sql - -->\r\n\r\n";
 	$row=$wpdb->get_row($sql);
 	if ($row) {	
@@ -675,7 +720,9 @@ function kpg_find_permalink_post_metaphone( $plink,$find,$kpg_pf_numbs ,$kpg_pf_
 	
 	if ($find > count($ss)) $findcnt=count($ss);
 	if (empty($ss)) return array(false,0);
-	$sql="SELECT ID,post_name as PN FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY post_modified DESC";
+	$sql="SELECT ID,post_name as PN FROM ".$wpdb->posts." WHERE post_status = 'publish' 
+	and POST_TYPE <> 'attachment' and POST_TYPE <> 'nav_menu_item' 
+	ORDER BY post_modified DESC";
 	$rows=$wpdb->get_results($sql,ARRAY_A);
 	$ansa=array();
 	foreach ($rows as $row) {
@@ -723,7 +770,9 @@ echo "\r\n";
 
 <?php
 	global $wpdb;	
-	$sql="SELECT ID FROM ".$wpdb->posts." WHERE post_status = 'publish' ORDER BY post_modified DESC LIMIT 20";
+	$sql="SELECT ID FROM ".$wpdb->posts." WHERE post_status = 'publish' 
+	and POST_TYPE <> 'attachment' and POST_TYPE <> 'nav_menu_item' 
+	ORDER BY post_modified DESC LIMIT 20";
 	$rows=$wpdb->get_results($sql,ARRAY_A);
 	foreach ($rows as $row) {
 		extract($row);
@@ -752,9 +801,17 @@ echo "\r\n";
 }
 
 // do a quick check to see if the sanitized slug can be found
+/*
+     post
+    page
+    attachment
+    revision
+    nav_menu_item 
+*/
 function kpg_find_permalink_post_direct($flink) {
 	global $wpdb; // useful db functions
-	$sql="SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_status = 'publish'";
+	$sql="SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_status = 'publish'
+	and POST_TYPE <> 'attachment' and POST_TYPE <> 'nav_menu_item'";
 	$post = $wpdb->get_var( $wpdb->prepare($sql , $flink ));
 	if ( !empty($post) ) return $post;
 

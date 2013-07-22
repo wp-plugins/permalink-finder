@@ -1,7 +1,7 @@
 === Permalink Finder Plugin ===
 Tags: permalinks, move, migrate, 301, 404, redirect, PageRank, seo,sitemap, robots.txt, crossdomain.xml, apple-touch-icon.png, favicon.ico
 Requires at least: 3.0  
-Stable tag: 2.2    
+Stable tag: 2.3   
 Tested up to: 3.5
 Contributors: Keith Graham       
 Donate link: http://www.blogseye.com/donate/
@@ -87,6 +87,13 @@ The plugin can be tested by adding or deleting words from a working permalink in
 * thanks to siddkb1986 who posted at the Wordpress plugin support page on Wordpress.org about query strings being lost. I incorporated the changes suggested.
 * Delayed loading of 404 processing in order to conserve memory resources. Only loads the redirection functions after a 404 has been detected.
 
+= 2.3 =
+* ignore search queries - s=search - as this is not a 404 and it caused looping.
+* Ignore feed requests as there is no permalink for things starting with /feed/
+* fixed load order and deleted an early an unecessary call to get_options
+* changed the way MU blog options are loaded.
+* fixed the links in the options page
+* Put in code to avoid recursive redirects. If redirect equals current page then let wordpress 404 it.
 
 == Support ==
 This plugin is free and I expect nothing in return. Please rate the plugin at: http://wordpress.org/extend/plugins/permalink-finder/

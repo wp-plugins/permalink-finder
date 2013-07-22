@@ -268,7 +268,7 @@ if (!defined('ABSPATH')) exit; // just in case
 ?>
 <div class="wrap">
   <h2>Permalink-Finder Options</h2>
-  <h3>Version 2.2</h3>
+  <h3>Version 2.3</h3>
   <h4><?php echo $totredir; ?> Permalinks redirected</h4>
   <?php
 	if ($nobuy!='Y') {
